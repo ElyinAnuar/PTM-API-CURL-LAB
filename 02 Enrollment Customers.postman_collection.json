@@ -1,0 +1,1442 @@
+{
+  "info": {
+    "_postman_id": "d9ae5745-dd44-47c5-900d-66a901e9000f",
+    "name": "02 APOS - Enrolamimento",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "29692220"
+  },
+  "item": [
+    {
+      "name": "00 Carga Inicial",
+      "item": [
+        {
+          "name": "00 ValidarUsuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga Inicial\r",
+                  "let jsonData = pm.response.json();\r",
+                  "\r",
+                  "// Guardar Token (nivel raíz)\r",
+                  "if (jsonData.Token) {\r",
+                  "    pm.environment.set(\"API_APOS_Token\", jsonData.Token);\r",
+                  "    pm.environment.set(\"ConectorID_Encryp\", jsonData.ConectorID);\r",
+                  "    pm.environment.set(\"API_APOS_DollaAccount\", jsonData.DollaAccount);\r",
+                  "    pm.environment.set(\"API_APOS_LocalAccount\", jsonData.LocalAccount);\r",
+                  "    //console.log(\"Token guardado:\", jsonData.ConectorID);\r",
+                  "}\r",
+                  "\r",
+                  "if (jsonData.datosToken && jsonData.datosToken.id_user_) {\r",
+                  "    pm.environment.set(\"API_APOS_id_user_\", jsonData.datosToken.id_user_);\r",
+                  "    pm.environment.set(\"API_APOS_session_token_\", jsonData.datosToken.session_token_);\r",
+                  "    pm.environment.set(\"API_APOS_cookie_\", jsonData.datosToken.cookie_);\r",
+                  "}\r",
+                  "\r",
+                  "if (jsonData.datosToken && jsonData.SesionUsuario.ServicePointId) {\r",
+                  "    pm.environment.set(\"API_APOS_IsoCountry\", jsonData.SesionUsuario.IsoCountry);\r",
+                  "    pm.environment.set(\"API_APOS_ServicePointId\", jsonData.SesionUsuario.ServicePointId);\r",
+                  "    pm.environment.set(\"API_APOS_PaisID\", jsonData.SesionUsuario.PaisID);\r",
+                  "    pm.environment.set(\"API_APOS_RegionID\", jsonData.SesionUsuario.RegionID);\r",
+                  "    pm.environment.set(\"API_APOS_ConnectorID\", jsonData.SesionUsuario.ConnectorID);\r",
+                  "    pm.environment.set(\"API_APOS_TerminalID\", jsonData.SesionUsuario.TerminalID);\r",
+                  "    pm.environment.set(\"API_APOS_AgenciaID\", jsonData.SesionUsuario.AgenciaID);\r",
+                  "\r",
+                  "}\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Validar Credenciales\", function () {\r",
+                  "    if (jsonData?.MessageError === \"Usuario/password inválido.\") {\r",
+                  "        pm.expect.fail(\"Credenciales inválidas en la respuesta\");\r",
+                  "    }\r",
+                  "});\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "\r",
+                  "////////////////////////////////Convertimos pass en encodeURI////////////////\r",
+                  "let pass = pm.environment.get(\"V_OPERADOR_PASSWORD\");\r",
+                  "let html = pass.split('')\r",
+                  "    .map(c => `&#${c.charCodeAt(0)};`)\r",
+                  "    .join('');\r",
+                  "let PassEncode = encodeURIComponent(html);\r",
+                  "\r",
+                  "////////////////////////////////Request final ///////////////////////////////\r",
+                  "\r",
+                  "pm.environment.set(\"V_OPERADOR_PASSWORD_ENCR\", PassEncode); \r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  "//0. contrasena\r",
+                  "//let pass = \"P0stm4n.!2D\"; \r",
+                  "//\r",
+                  "//// 1. Convertir a HTML ASCII (&#...;)\r",
+                  "//let html = pass.split('')\r",
+                  "//  .map(c => `&#${c.charCodeAt(0)};`)\r",
+                  "//  .join('');\r",
+                  "//// 2. Aplicar URL encoding\r",
+                  "//let value = encodeURIComponent(html);\r",
+                  "//console.log(value); \r",
+                  "//\r",
+                  "//// 0. Encriptado\r",
+                  "//let encoded = value;\r",
+                  "//// 1. URL decode\r",
+                  "//let urlDecoded = decodeURIComponent(encoded);\r",
+                  "//// 2. HTML ASCII (&#...;) → pass\r",
+                  "//let resultado = urlDecoded.replace(/&#(\\d+);/g, function(match, dec) {\r",
+                  "//    return String.fromCharCode(dec);\r",
+                  "//});\r",
+                  "//\r",
+                  "//console.log(resultado);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://ca-aposng-api-ws.{{nginx}}.airpak-services.com/api/Login/ValidarUsuario?codigo={{V_OPERADOR_CODIFO}}&usuario={{V_OPERADOR_USUARIO}}&password={{V_OPERADOR_PASSWORD_ENCR}}&jsoncookie={{V_USER_JSONCOOKIE}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-api-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Login",
+                "ValidarUsuario"
+              ],
+              "query": [
+                {
+                  "key": "codigo",
+                  "value": "{{V_OPERADOR_CODIFO}}"
+                },
+                {
+                  "key": "usuario",
+                  "value": "{{V_OPERADOR_USUARIO}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{V_OPERADOR_PASSWORD_ENCR}}"
+                },
+                {
+                  "key": "jsoncookie",
+                  "value": "{{V_USER_JSONCOOKIE}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "01 CargarMainProductos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-api-ws.{{nginx}}.airpak-services.com/api/MainProductos/CargarMainProductos?IdUser={{API_APOS_id_user_}}&ServicePoint={{API_APOS_ServicePointId}}&PaisISO={{API_APOS_IsoCountry}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-api-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "MainProductos",
+                "CargarMainProductos"
+              ],
+              "query": [
+                {
+                  "key": "IdUser",
+                  "value": "{{API_APOS_id_user_}}"
+                },
+                {
+                  "key": "ServicePoint",
+                  "value": "{{API_APOS_ServicePointId}}"
+                },
+                {
+                  "key": "PaisISO",
+                  "value": "{{API_APOS_IsoCountry}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 ObtenerCredenciales",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_APOS_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-apos-hlpshft-ws.{{nginx}}.airpak-services.com/ObtenerCredenciales?isoCountry={{API_APOS_IsoCountry}}&urlApp=APOS_CA&userID={{API_APOS_id_user_}}",
+              "protocol": "https",
+              "host": [
+                "ca-apos-hlpshft-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "ObtenerCredenciales"
+              ],
+              "query": [
+                {
+                  "key": "isoCountry",
+                  "value": "{{API_APOS_IsoCountry}}"
+                },
+                {
+                  "key": "urlApp",
+                  "value": "APOS_CA"
+                },
+                {
+                  "key": "userID",
+                  "value": "{{API_APOS_id_user_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 ObtenerCanales",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_APOS_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-apos-hlpshft-ws.{{nginx}}.airpak-services.com/ObtenerCanales?isoCountry={{API_APOS_IsoCountry}}&urlApp=APOS_CA&userID={{API_APOS_id_user_}}",
+              "protocol": "https",
+              "host": [
+                "ca-apos-hlpshft-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "ObtenerCanales"
+              ],
+              "query": [
+                {
+                  "key": "isoCountry",
+                  "value": "{{API_APOS_IsoCountry}}"
+                },
+                {
+                  "key": "urlApp",
+                  "value": "APOS_CA"
+                },
+                {
+                  "key": "userID",
+                  "value": "{{API_APOS_id_user_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 GetMetodoGenerico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetMetodoGenerico?country={{API_APOS_IsoCountry}}&operation_producto_id=NA&product=NA&type=countriesanddocuments2",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetMetodoGenerico"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "{{API_APOS_IsoCountry}}"
+                },
+                {
+                  "key": "operation_producto_id",
+                  "value": "NA"
+                },
+                {
+                  "key": "product",
+                  "value": "NA"
+                },
+                {
+                  "key": "type",
+                  "value": "countriesanddocuments2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 GetPais",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetPais?pais={{API_APOS_IsoCountry}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetPais"
+              ],
+              "query": [
+                {
+                  "key": "pais",
+                  "value": "{{API_APOS_IsoCountry}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 GetAgentNameById_CA",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_APOS_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-apos-hlpshft-ws.{{nginx}}.airpak-services.com/GetAgentNameById_CA?ServicePointID={{API_APOS_ServicePointId}}&UserID={{API_APOS_id_user_}}",
+              "protocol": "https",
+              "host": [
+                "ca-apos-hlpshft-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "GetAgentNameById_CA"
+              ],
+              "query": [
+                {
+                  "key": "ServicePointID",
+                  "value": "{{API_APOS_ServicePointId}}"
+                },
+                {
+                  "key": "UserID",
+                  "value": "{{API_APOS_id_user_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 GetServicePointNameById_CA",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_APOS_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-apos-hlpshft-ws.{{nginx}}.airpak-services.com/GetServicePointNameById_CA?ServicePointID={{API_APOS_ServicePointId}}&UserID={{API_APOS_id_user_}}",
+              "protocol": "https",
+              "host": [
+                "ca-apos-hlpshft-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "GetServicePointNameById_CA"
+              ],
+              "query": [
+                {
+                  "key": "ServicePointID",
+                  "value": "{{API_APOS_ServicePointId}}"
+                },
+                {
+                  "key": "UserID",
+                  "value": "{{API_APOS_id_user_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "08 CargarMain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-api-ws.{{nginx}}.airpak-services.com/api/Main/CargarMain?IdPais={{API_APOS_PaisID}}&IdUser={{API_APOS_id_user_}}&ServicePoint={{API_APOS_ServicePointId}}&Iso_Pais={{API_APOS_IsoCountry}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-api-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Main",
+                "CargarMain"
+              ],
+              "query": [
+                {
+                  "key": "IdPais",
+                  "value": "{{API_APOS_PaisID}}"
+                },
+                {
+                  "key": "IdUser",
+                  "value": "{{API_APOS_id_user_}}"
+                },
+                {
+                  "key": "ServicePoint",
+                  "value": "{{API_APOS_ServicePointId}}"
+                },
+                {
+                  "key": "Iso_Pais",
+                  "value": "{{API_APOS_IsoCountry}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 Enrolamiento",
+      "item": [
+        {
+          "name": "00 ValidarSesion (APIENV)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonDataEnvio = pm.response.json();\r",
+                  " \r",
+                  "if (jsonDataEnvio.Token) {\r",
+                  "\r",
+                  "    pm.environment.set(\"API_Envio_Token\", jsonDataEnvio.Token);\r",
+                  "    pm.environment.set(\"API_Envio_id_user_\", jsonDataEnvio.datosToken.id_user_);\r",
+                  "    pm.environment.set(\"API_Envio_ConectorID\", jsonDataEnvio.ConectorID);\r",
+                  "    pm.environment.set(\"API_Envio_DollaAccount\", jsonDataEnvio.DollaAccount);\r",
+                  "    pm.environment.set(\"API_Envio_LocalAccount\", jsonDataEnvio.LocalAccount); \r",
+                  "    pm.environment.set(\"API_Envio_ServicePoint\", jsonDataEnvio.ServicePoint); \r",
+                  "    pm.environment.set(\"API_Envio_RegionID\", jsonDataEnvio.SesionUsuario.RegionID); \r",
+                  "    pm.environment.set(\"API_Envio_ConnectorID\", jsonDataEnvio.SesionUsuario.ConnectorID); \r",
+                  "\r",
+                  "    pm.environment.set(\"API_Envio_H2HOperator\", jsonDataEnvio.SesionUsuario.H2HOperator);\r",
+                  "    pm.environment.set(\"API_Envio_H2HPassword\", jsonDataEnvio.SesionUsuario.H2HPassword);\r",
+                  "    pm.environment.set(\"API_Envio_AgencyLocalAccount\", jsonDataEnvio.SesionUsuario.AgencyLocalAccount);\r",
+                  "    pm.environment.set(\"API_Envio_TerminalID\", jsonDataEnvio.SesionUsuario.TerminalID); \r",
+                  "    pm.environment.set(\"API_Envio_PaisID\", jsonDataEnvio.SesionUsuario.PaisID);\r",
+                  "    pm.environment.set(\"API_Envio_AgenciaID\", jsonDataEnvio.SesionUsuario.AgenciaID);\r",
+                  "    pm.environment.set(\"API_Envio_IsoCountry\", jsonDataEnvio.SesionUsuario.IsoCountry); \r",
+                  "\r",
+                  "    pm.environment.set(\"API_Envio_SubAgentID\", jsonDataEnvio.SesionUsuario.SubAgentID); \r",
+                  "    \r",
+                  "    //Carga de toda la configuracion para mas adelante en el envio\r",
+                  "    pm.environment.set(\"V_Sesion_Completa\", JSON.stringify(jsonDataEnvio));\r",
+                  "\r",
+                  "    //console.log(\"API_Envio_H2HOperator:\", jsonDataEnvio.SesionUsuario.H2HOperator);\r",
+                  "};\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Validar Credenciales\", function () {\r",
+                  "    if (jsonDataEnvio?.MessageError === \"Usuario/password inválido.\") {\r",
+                  "        pm.expect.fail(\"Credenciales inválidas en la respuesta\");\r",
+                  "    }\r",
+                  "    else{pm.expect(true).to.be.true;} // Todo OK}\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Login/ValidarSesion?Cookie_={{API_APOS_cookie_}}&session_token_={{API_APOS_session_token_}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Login",
+                "ValidarSesion"
+              ],
+              "query": [
+                {
+                  "key": "Cookie_",
+                  "value": "{{API_APOS_cookie_}}"
+                },
+                {
+                  "key": "session_token_",
+                  "value": "{{API_APOS_session_token_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "01 GetSearchUser",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "\r",
+                  "//Se crea un documento con un código único para cada solicitud.\r",
+                  "const now = new Date();\r",
+                  "\r",
+                  "const codigo = \"CURL-\" +\r",
+                  "  String(now.getDate()).padStart(2, '0') +\r",
+                  "  String(now.getMonth() + 1).padStart(2, '0') +\r",
+                  "  now.getFullYear() +\r",
+                  "  String(now.getHours()).padStart(2, '0') +\r",
+                  "  String(now.getMinutes()).padStart(2, '0');\r",
+                  "\r",
+                  "// Guardarlo como variable\r",
+                  "pm.environment.set(\"V_API_APICLI_DOC\", codigo); \r",
+                  "\r",
+                  "console.log(codigo);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetSearchUser?document={{V_API_APICLI_DOC}}&first_name=&last_name=&country={{API_Envio_IsoCountry}}&geo_point=00&birthday_date=&agency_id={{API_Envio_AgenciaID}}&agency_account={{API_Envio_DollaAccount}}&user={{API_Envio_id_user_}}&terminal_id={{API_Envio_TerminalID}}&counter_id={{ConectorID_Encryp}}&servicepoint={{API_Envio_ServicePoint}}&pais_id={{API_Envio_PaisID}}&UpdateDataEnrollment=true",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetSearchUser"
+              ],
+              "query": [
+                {
+                  "key": "document",
+                  "value": "{{V_API_APICLI_DOC}}"
+                },
+                {
+                  "key": "first_name",
+                  "value": ""
+                },
+                {
+                  "key": "last_name",
+                  "value": ""
+                },
+                {
+                  "key": "country",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "geo_point",
+                  "value": "00"
+                },
+                {
+                  "key": "birthday_date",
+                  "value": ""
+                },
+                {
+                  "key": "agency_id",
+                  "value": "{{API_Envio_AgenciaID}}"
+                },
+                {
+                  "key": "agency_account",
+                  "value": "{{API_Envio_DollaAccount}}"
+                },
+                {
+                  "key": "user",
+                  "value": "{{API_Envio_id_user_}}"
+                },
+                {
+                  "key": "terminal_id",
+                  "value": "{{API_Envio_TerminalID}}"
+                },
+                {
+                  "key": "counter_id",
+                  "value": "{{ConectorID_Encryp}}"
+                },
+                {
+                  "key": "servicepoint",
+                  "value": "{{API_Envio_ServicePoint}}"
+                },
+                {
+                  "key": "pais_id",
+                  "value": "{{API_Envio_PaisID}}"
+                },
+                {
+                  "key": "UpdateDataEnrollment",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 GetSexo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Cargamos el response\r",
+                  "let jsonData = pm.response.json();\r",
+                  " \r",
+                  "//Recuperamos el sexo, para el ejemplo \"femenino\"\r",
+                  "pm.environment.set(\"V_UTIL_SEX\", jsonData.find(item => item.Nombre === \"Femenino\")?.Codigo); \r",
+                  " \r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Utilidades/GetSexo",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Utilidades",
+                "GetSexo"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 GetTipoEstadoCivilCatalogo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Cargamos el response\r",
+                  "let jsonData = pm.response.json();\r",
+                  "\r",
+                  "const randomIndex = Math.floor(Math.random() * jsonData.length);\r",
+                  "const estadoAleatorio = jsonData[randomIndex].Value.toUpperCase();\r",
+                  "\r",
+                  "pm.environment.set(\"V_UTIL_ESTADO_CIVIL\", estadoAleatorio);\r",
+                  "\r",
+                  "//pm.environment.set(\"V_UTIL_ESTADO_CIVIL\",jsonData.find(item => item.Value === \"Casado\")?.Value.toUpperCase())\r",
+                  "\r",
+                  "//pm.environment.set(\"V_UTIL_ESTADO_CIVIL\", JSON.stringify(jsonData)); \r",
+                  "//const EstadoCivil = CivilData.find(item => item.Value === \"Casado\")?.Value.toUpperCase();\r",
+                  "//console.log(\"Estado civil aleatorio:\", estadoAleatorio);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Utilidades/GetTipoEstadoCivilCatalogo?region={{API_Envio_RegionID}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Utilidades",
+                "GetTipoEstadoCivilCatalogo"
+              ],
+              "query": [
+                {
+                  "key": "region",
+                  "value": "{{API_Envio_RegionID}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 GetPais",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Obtener el valor de la variable del environment o collection\r",
+                  "let isoCountry = pm.variables.get(\"API_Envio_IsoCountry\");\r",
+                  "\r",
+                  "// Convertir a minúsculas\r",
+                  "pm.environment.set(\"V_isoCountryLower\", isoCountry.toLowerCase());\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga Inicial\r",
+                  "let data = pm.response.json();\r",
+                  "\r",
+                  "//Guardar los paises para futuro flujo Envio\r",
+                  "pm.environment.set(\"API_Envio_Paises\", JSON.stringify(data));\r",
+                  "//let paises = JSON.parse(pm.environment.get(\"API_Envio_Paises\"));\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetPais?pais={{V_isoCountryLower}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetPais"
+              ],
+              "query": [
+                {
+                  "key": "pais",
+                  "value": "{{V_isoCountryLower}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 GetOcupacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga Inicial\r",
+                  "let data = pm.response.json();\r",
+                  "\r",
+                  "//Guardar los paises para futuro flujo Envio\r",
+                  "//pm.environment.set(\"V_UTIL_OCUPACION\", JSON.stringify(data)); \r",
+                  "const lista = data.ocupacion;\r",
+                  "const randomIndex = Math.floor(Math.random() * lista.length);\r",
+                  "//const Ocupacion = lista[randomIndex].Nombre;\r",
+                  "\r",
+                  "//Recuperamos el sexo, para el ejemplo \"femenino\"\r",
+                  "pm.environment.set(\"V_UTIL_OCUPACION\", lista[randomIndex].Nombre); \r",
+                  " "
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetOcupacion?country={{API_Envio_RegionID}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetOcupacion"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "{{API_Envio_RegionID}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 GetTipoDocumentoCatalogo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga Inicial\r",
+                  "let data = pm.response.json();\r",
+                  "\r",
+                  "const pasaporteObj = data.find(item => item.Value === \"PASAPORTE\");\r",
+                  "pm.environment.set(\"V_UTIL_DOCUMENTOS\", JSON.stringify(pasaporteObj)); \r",
+                  "\r",
+                  "//Guardar los paises para futuro flujo Envio\r",
+                  "//pm.environment.set(\"V_UTIL_DOCUMENTOS\", JSON.stringify(data)); \r",
+                  "\r",
+                  "// Buscar el objeto con Value \"PASAPORTE\"\r",
+                  "//const pasaporteObj = DocumentoData.find(item => item.Value === \"PASAPORTE\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Utilidades/GetTipoDocumentoCatalogo?region={{API_Envio_RegionID}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Utilidades",
+                "GetTipoDocumentoCatalogo"
+              ],
+              "query": [
+                {
+                  "key": "region",
+                  "value": "{{API_Envio_RegionID}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 GetEstados (Step 1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Obtener el JSON de la respuesta de la API\r",
+                  "let estadosData = pm.response.json();\r",
+                  " \r",
+                  "// Lista de estados\r",
+                  "const lista = estadosData.estados;\r",
+                  "// Elegir un índice aleatorio\r",
+                  "const randomIndex = Math.floor(Math.random() * lista.length);\r",
+                  "// Obtener el estado aleatorio\r",
+                  "const estadoAleatorio = lista[randomIndex];\r",
+                  "// Guardar Código y Nombre en variables de entorno\r",
+                  "pm.environment.set(\"V_STATE_CODE\", estadoAleatorio.Codigo);\r",
+                  "pm.environment.set(\"V_STATE_NAME\", estadoAleatorio.Nombre);\r",
+                  " \r",
+                  "//console.log(\"Código:\", estadoAleatorio.Codigo);\r",
+                  "//console.log(\"Nombre:\", estadoAleatorio.Nombre);\r",
+                  "\r",
+                  "\r",
+                  "//Guardar los paises para futuro flujo enrolamiento\r",
+                  "//pm.environment.set(\"V_UTIL_ESTADOS\", JSON.stringify(data)); \r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetEstados?pais={{API_Envio_IsoCountry}}&padreId={{API_Envio_IsoCountry}}&padreValor={{API_Envio_IsoCountry}}&product=WU&consultaCargos=false",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetEstados"
+              ],
+              "query": [
+                {
+                  "key": "pais",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "padreId",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "padreValor",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "product",
+                  "value": "WU"
+                },
+                {
+                  "key": "consultaCargos",
+                  "value": "false"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "08 GetLocalidades (Step 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  " pm.environment.set(\"V_GET_LOCALIDAD\", pm.response.json().localidades[Math.floor(Math.random() * pm.response.json().localidades.length)].Codigo);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetLocalidades?pais={{API_Envio_IsoCountry}}&padreId={{V_STATE_CODE}}&padreValor={{V_STATE_NAME}}&consultaCargos=false",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetLocalidades"
+              ],
+              "query": [
+                {
+                  "key": "pais",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "padreId",
+                  "value": "{{V_STATE_CODE}}"
+                },
+                {
+                  "key": "padreValor",
+                  "value": "{{V_STATE_NAME}}"
+                },
+                {
+                  "key": "consultaCargos",
+                  "value": "false"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "09 GetNacionalidades",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.environment.set(\"V_NACION_BIRTH\", pm.response.json().nacionalidad[Math.floor(Math.random() * pm.response.json().nacionalidad.length)].Codigo);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Utilidades/GetNacionalidades?nacionalidad=",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Utilidades",
+                "GetNacionalidades"
+              ],
+              "query": [
+                {
+                  "key": "nacionalidad",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10 CrearUsuarioCompleto (CR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga Inicial\r",
+                  "let data = pm.response.json();\r",
+                  "\r",
+                  "// Validar status HTTP 200\r",
+                  "pm.test(\"Status code es 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Mensaje es 'Operación realizada con éxito'\", function () {\r",
+                  "    const mensaje = data?.statusApi?.StatusMensaje;\r",
+                  "\r",
+                  "    pm.expect(mensaje).to.eql(\"Operación realizada con éxito\");\r",
+                  "\r",
+                  "    if (mensaje !== \"Operación realizada con éxito\") {\r",
+                  "        console.log(\"Enrolamiento de cliente detenido. Mensaje recibido:\", mensaje);\r",
+                  "        pm.setNextRequest(null);\r",
+                  "    }\r",
+                  "});\r",
+                  "\r",
+                  "//Guardar el nuevo documento\r",
+                  "pm.environment.get(\"Id_Cliente_Document\", data.id_number);\r",
+                  " \r",
+                  " //Guardar la data completa\r",
+                  "pm.environment.set(\"API_ACLI_NEW_CLIENTE\", JSON.stringify(data));\r",
+                  "//let paises = JSON.parse(pm.environment.get(\"API_Envio_Paises\"));\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  " "
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "////////////////////////////////Data guardada////////////////////////////////\r",
+                  "\r",
+                  "let SesionData = JSON.parse(pm.environment.get(\"V_Sesion_Completa\"));\r",
+                  "let PaisData = JSON.parse(pm.environment.get(\"API_Envio_Paises\"));\r",
+                  "let DocumentoData = JSON.parse(pm.environment.get(\"V_UTIL_DOCUMENTOS\"));\r",
+                  "\r",
+                  "////////////////////////////////Tool/////////////////////////////////////////\r",
+                  "\r",
+                  "// Fecha de expiracion del documento\r",
+                  "const now = new Date();\r",
+                  "const day = String(now.getDate()).padStart(2, '0');\r",
+                  "const month = String(now.getMonth() + 1).padStart(2, '0');\r",
+                  "const nextYear = now.getFullYear() + 1;\r",
+                  "const FechaExpira = day + month + nextYear;\r",
+                  "\r",
+                  "//Fecha de nacimiento de forma randon entre 1950 y 2031\r",
+                  "const currentYear = new Date().getFullYear();\r",
+                  "const maxYear = currentYear - 18;\r",
+                  "const minYear = 1950;\r",
+                  "const year = Math.floor(Math.random() * (maxYear - minYear + 1)) + minYear;\r",
+                  "const month1 = Math.floor(Math.random() * 12) + 1;\r",
+                  "const day1 = Math.floor(Math.random() * new Date(year, month, 0).getDate()) + 1;\r",
+                  "const FechaNacimiento = String(day).padStart(2, '0') +\r",
+                  "    String(month).padStart(2, '0') +\r",
+                  "    String(year);\r",
+                  "\r",
+                  "////////////////////////////////Código ISO del pais////////////////////////////////\r",
+                  "\r",
+                  "const isoPais = pm.environment.get(\"API_Envio_IsoCountry\"); // ejemplo: \"NI\"\r",
+                  "let NombrePais;\r",
+                  "switch (isoPais) {\r",
+                  "    case \"NI\": NombrePais = \"Nicaragua\"; break;\r",
+                  "    case \"GT\": NombrePais = \"Guatemala\"; break;\r",
+                  "    case \"HN\": NombrePais = \"Honduras\"; break;\r",
+                  "    case \"CR\": NombrePais = \"Costa Rica\"; break;\r",
+                  "    case \"MX\": NombrePais = \"Mexico\"; break;\r",
+                  "    default: NombrePais = \"Desconocido\";\r",
+                  "}\r",
+                  "\r",
+                  "////////////////////////////////Armar el request final/////////////////////\r",
+                  "\r",
+                  "let requestBody =\r",
+                  "{\r",
+                  "    addr_line1: `CURL POSTMAN - DEVOPS/QA ${FechaExpira}`, //\"CURL POSTMAN - DEVOPS/QA \" + String(FechaExpira),\r",
+                  "    addr_line2: \"\",\r",
+                  "    agency_account: SesionData.DollaAccount,\r",
+                  "    agency_id: SesionData.SesionUsuario.AgenciaID,\r",
+                  "    cargo_desem: \"\",\r",
+                  "    city: pm.environment.get(\"V_GET_LOCALIDAD\"),\r",
+                  "    counter_id: SesionData.ConectorID,\r",
+                  "    country: pm.environment.get(\"API_Envio_IsoCountry\"),\r",
+                  "    country_code: pm.environment.get(\"API_Envio_IsoCountry\"),\r",
+                  "    country_name: NombrePais,\r",
+                  "    country_of_birth: pm.environment.get(\"V_NACION_BIRTH\"),\r",
+                  "    date_of_birth: String(FechaNacimiento),\r",
+                  "    description_public_position: \"\",\r",
+                  "    email: `${pm.environment.get(\"V_API_APICLI_DOC\").toLowerCase()}@airpak.com`,\r",
+                  "    familia_en_politica: \"N\",\r",
+                  "    first_name1: \"ESMERALDA\",\r",
+                  "    first_name2: \"LILIETH\",\r",
+                  "    has_relative_politics: false,\r",
+                  "    id_country_of_issue: pm.environment.get(\"V_NACION_BIRTH\"),\r",
+                  "    id_expiration_date: String(FechaExpira),\r",
+                  "    id_issue_date: \"\",\r",
+                  "    id_number: pm.environment.get(\"V_API_APICLI_DOC\"),\r",
+                  "    id_place_of_issue: \"\",\r",
+                  "    id_type: DocumentoData.Id,\r",
+                  "    id_type_name: DocumentoData.Value,\r",
+                  "    is_pep: \"N\",\r",
+                  "    last_name1: \"SILMARIL\",\r",
+                  "    last_name2: \"GUILLIMAN\",\r",
+                  "    marital_status: pm.environment.get(\"V_UTIL_ESTADO_CIVIL\"),\r",
+                  "    married_name: \"ESMERALDA GUILLIMAN\",\r",
+                  "    nationality: pm.environment.get(\"V_NACION_BIRTH\"),\r",
+                  "    nit: \"\",\r",
+                  "    noTieneSegundoApellido: false,\r",
+                  "    noTieneSegundoNombre: false,\r",
+                  "    number: String(\"8\" + Math.floor(Math.random() * 10000000).toString().padStart(7, '0')),\r",
+                  "    occupation: pm.environment.get(\"V_UTIL_OCUPACION\"),\r",
+                  "    place_of_birth: \"\",\r",
+                  "    postal_code: \"11010\",\r",
+                  "    product: \"WU\",\r",
+                  "    public_position: false,\r",
+                  "    service_point: parseInt(SesionData.SesionUsuario.ServicePointId),\r",
+                  "    sex: pm.environment.get(\"V_UTIL_SEX\"),\r",
+                  "    state_code: pm.environment.get(\"V_STATE_CODE\"),\r",
+                  "    state_name: pm.environment.get(\"V_STATE_NAME\"),\r",
+                  "    terminal_id: SesionData.SesionUsuario.TerminalID,\r",
+                  "    tiempo_desem: \"\",\r",
+                  "    time_public_position: \"\",\r",
+                  "    user: SesionData.SesionUsuario.Id\r",
+                  "}\r",
+                  "\r",
+                  "pm.environment.set(\"V_API_CLI_CREATE\", JSON.stringify(requestBody));\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{V_API_CLI_CREATE}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://ca-aposng-apicli-ws.{{nginx}}.airpak-services.com/api/CrearUsuarioCompleto?",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apicli-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "CrearUsuarioCompleto"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "00 Cerrar Sesion",
+      "item": [
+        {
+          "name": "00 CerrarSesion",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Año actual\r",
+                  "const currentYear = new Date().getFullYear();\r",
+                  "const maxYear = currentYear - 18;\r",
+                  "const minYear = 1950;\r",
+                  "const year = Math.floor(Math.random() * (maxYear - minYear + 1)) + minYear;\r",
+                  "const month = Math.floor(Math.random() * 12) + 1;\r",
+                  "const day = Math.floor(Math.random() * new Date(year, month, 0).getDate()) + 1;\r",
+                  "const FechaNacimiento = String(day).padStart(2, '0') +\r",
+                  "                         String(month).padStart(2, '0') +\r",
+                  "                         String(year);\r",
+                  "\r",
+                  "console.log(FechaNacimiento);\r",
+                  "\r",
+                  "\r",
+                  "//const year = Math.floor(Math.random() * (2031 - 1950 + 1)) + 1950;\r",
+                  "//const month1 = Math.floor(Math.random() * 12) + 1;\r",
+                  "//const day1 = Math.floor(Math.random() * new Date(year, month1, 0).getDate()) + 1;\r",
+                  "//const FechaNacimiento = String(day1).padStart(2, '0') +\r",
+                  "//    String(month1).padStart(2, '0') +\r",
+                  "//    String(year);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-api-ws.{{nginx}}.airpak-services.com/api/Main/CerrarSesion?code={{API_APOS_ServicePointId}}&user={{API_APOS_id_user_}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-api-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Main",
+                "CerrarSesion"
+              ],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "{{API_APOS_ServicePointId}}"
+                },
+                {
+                  "key": "user",
+                  "value": "{{API_APOS_id_user_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

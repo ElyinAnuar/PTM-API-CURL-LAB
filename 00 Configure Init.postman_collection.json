@@ -1,0 +1,415 @@
+{
+  "info": {
+    "_postman_id": "1677b511-99c9-45c5-9274-f7569c1714cc",
+    "name": "00 APOS - Configurar Terminal",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "29692220"
+  },
+  "item": [
+    {
+      "name": "Configuracion Terminal",
+      "item": [
+        {
+          "name": "00 Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Cargamos el response\r",
+                  "let jsonData = pm.response.json();\r",
+                  "\r",
+                  "pm.environment.set(\"V_ADMIN_TERMINAL\", JSON.stringify(jsonData));\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-api-ws.{{nginx}}.airpak-services.com/AdministrarTerminales/Login?UserCode={{V_Supervisor_Code}}&User={{V_Supervisor_User}}&Password={{V_Supervisor_Password}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-api-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "AdministrarTerminales",
+                "Login"
+              ],
+              "query": [
+                {
+                  "key": "UserCode",
+                  "value": "{{V_Supervisor_Code}}"
+                },
+                {
+                  "key": "User",
+                  "value": "{{V_Supervisor_User}}"
+                },
+                {
+                  "key": "Password",
+                  "value": "{{V_Supervisor_Password}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "01 getTerminales",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Cargamos el response\r",
+                  "let jsonData = pm.response.json();\r",
+                  "\r",
+                  "pm.environment.set(\"V_LIST_TERMINAL\", JSON.stringify(jsonData));\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-api-ws.{{nginx}}.airpak-services.com/ListTerminales/getTerminales?codigo={{V_Supervisor_Code}}&user={{V_Supervisor_User}}&password={{V_Supervisor_Password}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-api-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "ListTerminales",
+                "getTerminales"
+              ],
+              "query": [
+                {
+                  "key": "codigo",
+                  "value": "{{V_Supervisor_Code}}"
+                },
+                {
+                  "key": "user",
+                  "value": "{{V_Supervisor_User}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{V_Supervisor_Password}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 selectTerminal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Cargamos el response\r",
+                  "let jsonData = pm.response.json();\r",
+                  "\r",
+                  "pm.environment.set(\"V_SELECT_TERMINAL\", JSON.stringify(jsonData));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "////////////////////////////////Data Terminal////////////////////////////////\r",
+                  "let data = pm.variables.get(\"V_LIST_TERMINAL\"); // obtiene la variable\r",
+                  "let table1 = null; // declaramos fuera del bloque para que sea accesible luego\r",
+                  "\r",
+                  "if (data) {\r",
+                  "    data = JSON.parse(data); // convierte de string a objeto\r",
+                  "    table1 = data.Table1[0]; // accede al primer elemento de Table1\r",
+                  "    pm.variables.set(\"table1\", JSON.stringify(data.Table1)); // guarda Table1 completa si quieres\r",
+                  "    console.log(\"Table1:\", table1);\r",
+                  "}\r",
+                  "\r",
+                  "////////////////////////////////Data Usuario////////////////////////////////\r",
+                  "let SesionData = pm.environment.get(\"V_ADMIN_TERMINAL\");\r",
+                  "if (SesionData) {\r",
+                  "    SesionData = JSON.parse(SesionData); // convierte de string a objeto\r",
+                  "}\r",
+                  "\r",
+                  "////////////////////////////////Seteamos los valores////////////////////////////////\r",
+                  "if (table1 && SesionData) {\r",
+                  "    pm.environment.set(\"V_USER_TERMINAL\", SesionData.user);\r",
+                  "    pm.environment.set(\"V_CODE_TERMINAL\", SesionData.userCode);\r",
+                  "    pm.environment.set(\"V_CONNECTORID_TERMINAL\", table1.string_connector_id);\r",
+                  "    pm.environment.set(\"V_TERMINALID_TERMINAL\", table1.string_terminal_id);\r",
+                  "    pm.environment.set(\"V_AGENCIAID_TERMINAL\", parseInt(SesionData.rolConfig[0].AgenciaID));\r",
+                  "    pm.environment.set(\"V_CTAMONEDALOCALAG_TERMINAL\", table1.CtaMonedaLocalAg);\r",
+                  "    pm.environment.set(\"V_CTAENDOLARESAG_TERMINAL\", table1.CtaEnDolaresAg);\r",
+                  "}\r",
+                  "\r",
+                  "////////////////////////////////Creamos el Body de la Petición////////////////////////////////\r",
+                  "\r",
+                  "let requestBody = {\r",
+                  "    DatetimeConfig: \"\",\r",
+                  "    RemoteIP: \"::1\",\r",
+                  "    RemoteHOST: \"GTGTSOITPL021.info.grupocoen.com\",\r",
+                  "    RemoteUSER: \"\",\r",
+                  "    RemoteMACAddress: \"025041000001\",\r",
+                  "    BrowserType: \"Chrome91\",\r",
+                  "    BrowserName: \"Chrome\",\r",
+                  "    BrowserPlataform: \"WinNT\",\r",
+                  "    ConectorID: \"\",\r",
+                  "    TerminalID: \"\",\r",
+                  "    DollaAccount: \"\",\r",
+                  "    LocalAccount: \"\"\r",
+                  "}\r",
+                  "\r",
+                  "pm.environment.set(\"TERMINAL_BODY_REQUEST\", JSON.stringify(requestBody));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "*/*"
+              },
+              {
+                "key": "Accept-Encoding",
+                "value": "gzip, deflate, br, zstd"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "es-ES,es;q=0.9"
+              },
+              {
+                "key": "Cache-Control",
+                "value": "max-age=0"
+              },
+              {
+                "key": "Connection",
+                "value": "keep-alive"
+              },
+              {
+                "key": "Content-Length",
+                "value": "279"
+              },
+              {
+                "key": "Host",
+                "value": "ca-aposng-api-ws.{{nginx}}.airpak-services.com"
+              },
+              {
+                "key": "Origin",
+                "value": "https://ca-aposng-base-wa.{{nginx}}.airpak-services.com"
+              },
+              {
+                "key": "Referer",
+                "value": "https://ca-aposng-base-wa.{{nginx}}.airpak-services.com/"
+              },
+              {
+                "key": "Sec-Fetch-Dest",
+                "value": "empty"
+              },
+              {
+                "key": "Sec-Fetch-Mode",
+                "value": "cors"
+              },
+              {
+                "key": "Sec-Fetch-Site",
+                "value": "same-site"
+              },
+              {
+                "key": "User-Agent",
+                "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+              },
+              {
+                "key": "access-control-allow-origin",
+                "value": "*"
+              },
+              {
+                "key": "content-type",
+                "value": "application/json"
+              },
+              {
+                "key": "sec-ch-ua",
+                "value": "\"Chromium\";v=\"136\", \"Google Chrome\";v=\"136\", \"Not.A/Brand\";v=\"99\""
+              },
+              {
+                "key": "sec-ch-ua-mobile",
+                "value": "?0"
+              },
+              {
+                "key": "sec-ch-ua-platform",
+                "value": "\"Windows\""
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{TERMINAL_BODY_REQUEST}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://ca-aposng-apis-ws.{{nginx}}.airpak-services.com/ListTerminales/selectTerminal?user={{V_USER_TERMINAL}}&code={{V_CODE_TERMINAL}}&connector_id={{V_CONNECTORID_TERMINAL}}&terminal_id={{V_TERMINALID_TERMINAL}}&id_agencia={{V_AGENCIAID_TERMINAL}}&CtaMonedaLocalAg={{V_CTAMONEDALOCALAG_TERMINAL}}&CtaEnDolaresAg={{V_CTAENDOLARESAG_TERMINAL}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apis-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "ListTerminales",
+                "selectTerminal"
+              ],
+              "query": [
+                {
+                  "key": "user",
+                  "value": "{{V_USER_TERMINAL}}"
+                },
+                {
+                  "key": "code",
+                  "value": "{{V_CODE_TERMINAL}}"
+                },
+                {
+                  "key": "connector_id",
+                  "value": "{{V_CONNECTORID_TERMINAL}}"
+                },
+                {
+                  "key": "terminal_id",
+                  "value": "{{V_TERMINALID_TERMINAL}}"
+                },
+                {
+                  "key": "id_agencia",
+                  "value": "{{V_AGENCIAID_TERMINAL}}"
+                },
+                {
+                  "key": "CtaMonedaLocalAg",
+                  "value": "{{V_CTAMONEDALOCALAG_TERMINAL}}"
+                },
+                {
+                  "key": "CtaEnDolaresAg",
+                  "value": "{{V_CTAENDOLARESAG_TERMINAL}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Login Supervisor",
+      "item": [
+        {
+          "name": "03 Login",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "////////////////////////////////Data Terminal////////////////////////////////\r",
+                  "\r",
+                  "let SelectData = JSON.parse(pm.environment.get(\"V_SELECT_TERMINAL\"));\r",
+                  "\r",
+                  "////////////////////////////////Seteamos los valores/////////////////////////\r",
+                  "\r",
+                  "let requestBody = {\r",
+                  "    BrowserName: \"InternetExplorer\",\r",
+                  "    BrowserPlataform: \"WinNT\",\r",
+                  "    ConectorID: SelectData.ConectorID,\r",
+                  "    DatetimeConfig: \"20260409093204855\",\r",
+                  "    DollaAccount: SelectData.DollaAccount,\r",
+                  "    HostName: \"products.airpak-services.com\",\r",
+                  "    IpAddress: \"127.0.0.1\",\r",
+                  "    LocalAccount: SelectData.LocalAccount,\r",
+                  "    MacAddress: \"MacAddress\",\r",
+                  "    TerminalID: SelectData.TerminalID\r",
+                  "}\r",
+                  " \r",
+                  "pm.environment.set(\"V_USER_JSONCOOKIE\", encodeURIComponent(JSON.stringify(requestBody)));\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Cargamos el response\r",
+                  "let jsonData = pm.response.json();\r",
+                  "\r",
+                  "pm.environment.set(\"V_INDEX_JSONCOOKIE\", JSON.stringify(jsonData));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-api-ws.{{nginx}}.airpak-services.com/api/Login/Index?jsoncookie={{V_USER_JSONCOOKIE}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-api-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Login",
+                "Index"
+              ],
+              "query": [
+                {
+                  "key": "jsoncookie",
+                  "value": "{{V_USER_JSONCOOKIE}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

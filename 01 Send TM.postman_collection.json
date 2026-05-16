@@ -1,0 +1,2630 @@
+{
+  "info": {
+    "_postman_id": "dba0869c-3890-4d63-97f9-f0e9bc3ff73f",
+    "name": "01 APOS - Envio Dinero",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "29692220"
+  },
+  "item": [
+    {
+      "name": "00 Carga Inicial",
+      "item": [
+        {
+          "name": "00 ValidarUsuario",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "\r",
+                  "////////////////////////////////Convertimos pass en encodeURI////////////////\r",
+                  "let pass = pm.environment.get(\"V_OPERADOR_PASSWORD\");\r",
+                  "let html = pass.split('')\r",
+                  "    .map(c => `&#${c.charCodeAt(0)};`)\r",
+                  "    .join('');\r",
+                  "let PassEncode = encodeURIComponent(html);\r",
+                  "\r",
+                  "////////////////////////////////Request final ///////////////////////////////\r",
+                  "\r",
+                  "pm.environment.set(\"V_OPERADOR_PASSWORD_ENCR\", PassEncode); \r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga Inicial\r",
+                  "let jsonData = pm.response.json();\r",
+                  "\r",
+                  "// Guardar Token (nivel raíz)\r",
+                  "if (jsonData.Token) {\r",
+                  "    pm.environment.set(\"API_APOS_Token\", jsonData.Token);\r",
+                  "    pm.environment.set(\"ConectorID_Encryp\", jsonData.ConectorID);\r",
+                  "    pm.environment.set(\"API_APOS_DollaAccount\", jsonData.DollaAccount);\r",
+                  "    pm.environment.set(\"API_APOS_LocalAccount\", jsonData.LocalAccount);\r",
+                  "    //console.log(\"Token guardado:\", jsonData.ConectorID);\r",
+                  "}\r",
+                  "\r",
+                  "if (jsonData.datosToken && jsonData.datosToken.id_user_) {\r",
+                  "    pm.environment.set(\"API_APOS_id_user_\", jsonData.datosToken.id_user_);\r",
+                  "    pm.environment.set(\"API_APOS_session_token_\", jsonData.datosToken.session_token_);\r",
+                  "    pm.environment.set(\"API_APOS_cookie_\", jsonData.datosToken.cookie_);\r",
+                  "}\r",
+                  "\r",
+                  "if (jsonData.datosToken && jsonData.SesionUsuario.ServicePointId) {\r",
+                  "    pm.environment.set(\"API_APOS_IsoCountry\", jsonData.SesionUsuario.IsoCountry);\r",
+                  "    pm.environment.set(\"API_APOS_ServicePointId\", jsonData.SesionUsuario.ServicePointId);\r",
+                  "    pm.environment.set(\"API_APOS_PaisID\", jsonData.SesionUsuario.PaisID);\r",
+                  "    pm.environment.set(\"API_APOS_RegionID\", jsonData.SesionUsuario.RegionID);\r",
+                  "    pm.environment.set(\"API_APOS_ConnectorID\", jsonData.SesionUsuario.ConnectorID);\r",
+                  "    pm.environment.set(\"API_APOS_TerminalID\", jsonData.SesionUsuario.TerminalID);\r",
+                  "    pm.environment.set(\"API_APOS_AgenciaID\", jsonData.SesionUsuario.AgenciaID);\r",
+                  "\r",
+                  "}\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Validar Credenciales\", function () {\r",
+                  "    if (jsonData?.MessageError === \"Usuario/password inválido.\") {\r",
+                  "        pm.expect.fail(\"Credenciales inválidas en la respuesta\");\r",
+                  "    }\r",
+                  "});\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-api-ws.{{nginx}}.airpak-services.com/api/Login/ValidarUsuario?codigo={{V_OPERADOR_CODIFO}}&usuario={{V_OPERADOR_USUARIO}}&password={{V_OPERADOR_PASSWORD_ENCR}}&jsoncookie={{V_USER_JSONCOOKIE}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-api-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Login",
+                "ValidarUsuario"
+              ],
+              "query": [
+                {
+                  "key": "codigo",
+                  "value": "{{V_OPERADOR_CODIFO}}"
+                },
+                {
+                  "key": "usuario",
+                  "value": "{{V_OPERADOR_USUARIO}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{V_OPERADOR_PASSWORD_ENCR}}"
+                },
+                {
+                  "key": "jsoncookie",
+                  "value": "{{V_USER_JSONCOOKIE}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "01 CargarMainProductos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-api-ws.{{nginx}}.airpak-services.com/api/MainProductos/CargarMainProductos?IdUser={{API_APOS_id_user_}}&ServicePoint={{API_APOS_ServicePointId}}&PaisISO={{API_APOS_IsoCountry}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-api-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "MainProductos",
+                "CargarMainProductos"
+              ],
+              "query": [
+                {
+                  "key": "IdUser",
+                  "value": "{{API_APOS_id_user_}}"
+                },
+                {
+                  "key": "ServicePoint",
+                  "value": "{{API_APOS_ServicePointId}}"
+                },
+                {
+                  "key": "PaisISO",
+                  "value": "{{API_APOS_IsoCountry}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 ObtenerCredenciales",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_APOS_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-apos-hlpshft-ws.{{nginx}}.airpak-services.com/ObtenerCredenciales?isoCountry={{API_APOS_IsoCountry}}&urlApp=APOS_CA&userID={{API_APOS_id_user_}}",
+              "protocol": "https",
+              "host": [
+                "ca-apos-hlpshft-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "ObtenerCredenciales"
+              ],
+              "query": [
+                {
+                  "key": "isoCountry",
+                  "value": "{{API_APOS_IsoCountry}}"
+                },
+                {
+                  "key": "urlApp",
+                  "value": "APOS_CA"
+                },
+                {
+                  "key": "userID",
+                  "value": "{{API_APOS_id_user_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 ObtenerCanales",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_APOS_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-apos-hlpshft-ws.{{nginx}}.airpak-services.com/ObtenerCanales?isoCountry={{API_APOS_IsoCountry}}&urlApp=APOS_CA&userID={{API_APOS_id_user_}}",
+              "protocol": "https",
+              "host": [
+                "ca-apos-hlpshft-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "ObtenerCanales"
+              ],
+              "query": [
+                {
+                  "key": "isoCountry",
+                  "value": "{{API_APOS_IsoCountry}}"
+                },
+                {
+                  "key": "urlApp",
+                  "value": "APOS_CA"
+                },
+                {
+                  "key": "userID",
+                  "value": "{{API_APOS_id_user_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 GetMetodoGenerico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetMetodoGenerico?country={{API_APOS_IsoCountry}}&operation_producto_id=NA&product=NA&type=countriesanddocuments2",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetMetodoGenerico"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "{{API_APOS_IsoCountry}}"
+                },
+                {
+                  "key": "operation_producto_id",
+                  "value": "NA"
+                },
+                {
+                  "key": "product",
+                  "value": "NA"
+                },
+                {
+                  "key": "type",
+                  "value": "countriesanddocuments2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 GetPais",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetPais?pais={{API_APOS_IsoCountry}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetPais"
+              ],
+              "query": [
+                {
+                  "key": "pais",
+                  "value": "{{API_APOS_IsoCountry}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 GetAgentNameById_CA",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_APOS_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-apos-hlpshft-ws.{{nginx}}.airpak-services.com/GetAgentNameById_CA?ServicePointID={{API_APOS_ServicePointId}}&UserID={{API_APOS_id_user_}}",
+              "protocol": "https",
+              "host": [
+                "ca-apos-hlpshft-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "GetAgentNameById_CA"
+              ],
+              "query": [
+                {
+                  "key": "ServicePointID",
+                  "value": "{{API_APOS_ServicePointId}}"
+                },
+                {
+                  "key": "UserID",
+                  "value": "{{API_APOS_id_user_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 GetServicePointNameById_CA",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_APOS_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-apos-hlpshft-ws.{{nginx}}.airpak-services.com/GetServicePointNameById_CA?ServicePointID={{API_APOS_ServicePointId}}&UserID={{API_APOS_id_user_}}",
+              "protocol": "https",
+              "host": [
+                "ca-apos-hlpshft-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "GetServicePointNameById_CA"
+              ],
+              "query": [
+                {
+                  "key": "ServicePointID",
+                  "value": "{{API_APOS_ServicePointId}}"
+                },
+                {
+                  "key": "UserID",
+                  "value": "{{API_APOS_id_user_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "08 CargarMain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-api-ws.{{nginx}}.airpak-services.com/api/Main/CargarMain?IdPais={{API_APOS_PaisID}}&IdUser={{API_APOS_id_user_}}&ServicePoint={{API_APOS_ServicePointId}}&Iso_Pais={{API_APOS_IsoCountry}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-api-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Main",
+                "CargarMain"
+              ],
+              "query": [
+                {
+                  "key": "IdPais",
+                  "value": "{{API_APOS_PaisID}}"
+                },
+                {
+                  "key": "IdUser",
+                  "value": "{{API_APOS_id_user_}}"
+                },
+                {
+                  "key": "ServicePoint",
+                  "value": "{{API_APOS_ServicePointId}}"
+                },
+                {
+                  "key": "Iso_Pais",
+                  "value": "{{API_APOS_IsoCountry}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 Envio CR",
+      "item": [
+        {
+          "name": "01 ValidarSesion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonDataEnvio = pm.response.json();\r",
+                  " \r",
+                  "if (jsonDataEnvio.Token) {\r",
+                  "\r",
+                  "    pm.environment.set(\"API_Envio_Token\", jsonDataEnvio.Token);\r",
+                  "    pm.environment.set(\"API_Envio_id_user_\", jsonDataEnvio.datosToken.id_user_);\r",
+                  "    pm.environment.set(\"API_Envio_ConectorID\", jsonDataEnvio.ConectorID);\r",
+                  "    pm.environment.set(\"API_Envio_DollaAccount\", jsonDataEnvio.DollaAccount);\r",
+                  "    pm.environment.set(\"API_Envio_LocalAccount\", jsonDataEnvio.LocalAccount); \r",
+                  "    pm.environment.set(\"API_Envio_ServicePoint\", jsonDataEnvio.ServicePoint); \r",
+                  "    pm.environment.set(\"API_Envio_RegionID\", jsonDataEnvio.SesionUsuario.RegionID); \r",
+                  "    pm.environment.set(\"API_Envio_ConnectorID\", jsonDataEnvio.SesionUsuario.ConnectorID); \r",
+                  "\r",
+                  "    pm.environment.set(\"API_Envio_H2HOperator\", jsonDataEnvio.SesionUsuario.H2HOperator);\r",
+                  "    pm.environment.set(\"API_Envio_H2HPassword\", jsonDataEnvio.SesionUsuario.H2HPassword);\r",
+                  "    pm.environment.set(\"API_Envio_AgencyLocalAccount\", jsonDataEnvio.SesionUsuario.AgencyLocalAccount);\r",
+                  "    pm.environment.set(\"API_Envio_TerminalID\", jsonDataEnvio.SesionUsuario.TerminalID); \r",
+                  "    pm.environment.set(\"API_Envio_PaisID\", jsonDataEnvio.SesionUsuario.PaisID);\r",
+                  "    pm.environment.set(\"API_Envio_AgenciaID\", jsonDataEnvio.SesionUsuario.AgenciaID);\r",
+                  "    pm.environment.set(\"API_Envio_IsoCountry\", jsonDataEnvio.SesionUsuario.IsoCountry); \r",
+                  "\r",
+                  "    pm.environment.set(\"API_Envio_SubAgentID\", jsonDataEnvio.SesionUsuario.SubAgentID); \r",
+                  "    \r",
+                  "    //Carga de toda la configuracion para mas adelante en el envio\r",
+                  "    pm.environment.set(\"V_Sesion_Completa\", JSON.stringify(jsonDataEnvio));\r",
+                  "\r",
+                  "    //console.log(\"API_Envio_H2HOperator:\", jsonDataEnvio.SesionUsuario.H2HOperator);\r",
+                  "};\r",
+                  "\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Validar Credenciales\", function () {\r",
+                  "    if (jsonDataEnvio?.MessageError === \"Usuario/password inválido.\") {\r",
+                  "        pm.expect.fail(\"Credenciales inválidas en la respuesta\");\r",
+                  "    }\r",
+                  "    else{pm.expect(true).to.be.true;} // Todo OK}\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Login/ValidarSesion?Cookie_={{API_APOS_cookie_}}&session_token_={{API_APOS_session_token_}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Login",
+                "ValidarSesion"
+              ],
+              "query": [
+                {
+                  "key": "Cookie_",
+                  "value": "{{API_APOS_cookie_}}"
+                },
+                {
+                  "key": "session_token_",
+                  "value": "{{API_APOS_session_token_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 GetOrigenes",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetOrigenes?country={{API_Envio_IsoCountry}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetOrigenes"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "{{API_Envio_IsoCountry}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 GetTipoRelacion",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Utilidades/GetTipoRelaci%C3%B3n?region={{API_Envio_RegionID}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Utilidades",
+                "GetTipoRelaci%C3%B3n"
+              ],
+              "query": [
+                {
+                  "key": "region",
+                  "value": "{{API_Envio_RegionID}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 GetDestinos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetDestinos?country={{API_Envio_IsoCountry}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetDestinos"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "{{API_Envio_IsoCountry}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 GetPais (Array)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Obtener el valor de la variable del environment o collection\r",
+                  "let isoCountry = pm.variables.get(\"API_Envio_IsoCountry\");\r",
+                  "\r",
+                  "// Convertir a minúsculas\r",
+                  "pm.environment.set(\"V_isoCountryLower\", isoCountry.toLowerCase());\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga Inicial\r",
+                  "let data = pm.response.json();\r",
+                  "\r",
+                  "//Guardar los paises para futuro flujo Envio\r",
+                  "pm.environment.set(\"API_Envio_Paises\", JSON.stringify(data));\r",
+                  "let paises = JSON.parse(pm.environment.get(\"API_Envio_Paises\"));\r",
+                  "\r",
+                  "//Pruebas Unitarias\r",
+                  "pm.test(\"Guardar respuesta en variable\", function () {\r",
+                  "    \r",
+                  "    if (data) {\r",
+                  "        pm.environment.set(\"API_Envio_Paises\", JSON.stringify(data));\r",
+                  "    } else {\r",
+                  "        console.error(\"No se pudo parsear el response\");\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetPais?pais={{V_isoCountryLower}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetPais"
+              ],
+              "query": [
+                {
+                  "key": "pais",
+                  "value": "{{V_isoCountryLower}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 GetOcupacion",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetOcupacion?country={{API_Envio_RegionID}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetOcupacion"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "{{API_Envio_RegionID}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 GetNacionalidades",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Utilidades/GetNacionalidades?nacionalidad=",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Utilidades",
+                "GetNacionalidades"
+              ],
+              "query": [
+                {
+                  "key": "nacionalidad",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "08 GetTipoDocumentoCatalogo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Utilidades/GetTipoDocumentoCatalogo?region={{API_Envio_RegionID}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Utilidades",
+                "GetTipoDocumentoCatalogo"
+              ],
+              "query": [
+                {
+                  "key": "region",
+                  "value": "{{API_Envio_RegionID}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "09 GetMetodoGenerico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetMetodoGenerico?country={{API_Envio_IsoCountry}}&operation_producto_id=NA&product=NA&type=documentTypeApos",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetMetodoGenerico"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "operation_producto_id",
+                  "value": "NA"
+                },
+                {
+                  "key": "product",
+                  "value": "NA"
+                },
+                {
+                  "key": "type",
+                  "value": "documentTypeApos"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10 ObtenerConfiguracionImpresionCA",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apicomp-ws.{{nginx}}.airpak-services.com/ObtenerConfiguracionImpresionCA?connectorID={{API_Envio_ConnectorID}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apicomp-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "ObtenerConfiguracionImpresionCA"
+              ],
+              "query": [
+                {
+                  "key": "connectorID",
+                  "value": "{{API_Envio_ConnectorID}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11 GetTipoEstadoCivilCatalogo",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Utilidades/GetTipoEstadoCivilCatalogo?region={{API_Envio_RegionID}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Utilidades",
+                "GetTipoEstadoCivilCatalogo"
+              ],
+              "query": [
+                {
+                  "key": "region",
+                  "value": "{{API_Envio_RegionID}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12 GetSexo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Utilidades/GetSexo?",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Utilidades",
+                "GetSexo"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "13 GetEstados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetEstados?pais={{API_Envio_IsoCountry}}&padreId={{API_Envio_IsoCountry}}&padreValor={{API_Envio_IsoCountry}}&product=WU&consultaCargos=false",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetEstados"
+              ],
+              "query": [
+                {
+                  "key": "pais",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "padreId",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "padreValor",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "product",
+                  "value": "WU"
+                },
+                {
+                  "key": "consultaCargos",
+                  "value": "false"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "14 GetSearchUser (PEN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga de inicial del response\r",
+                  "let jsonData = pm.response.json();\r",
+                  "\r",
+                  "// Guardar Token (nivel raíz)\r",
+                  "if (jsonData.customer_id) {\r",
+                  "    pm.environment.set(\"customer_id\", jsonData.customer_id);\r",
+                  "    pm.environment.set(\"id_type\", jsonData.id_type);\r",
+                  "};\r",
+                  "\r",
+                  "//Guardar Toda la configuracion del cliente, necesario para el Fee y el Envio\r",
+                  "pm.environment.set(\"V_Ficha_Completa\", JSON.stringify(jsonData));\r",
+                  "//let FichaCompleta = JSON.parse(pm.environment.get(\"V_Ficha_Completa\"));\r",
+                  "\r",
+                  "//console.log(FichaCompleta);\r",
+                  "\r",
+                  "//Valida que el cliente exista\r",
+                  "pm.test(\"Validar que encuentre el cliente\", function () {\r",
+                  "    let jsonData = pm.response.json();\r",
+                  "\r",
+                  "    if (jsonData.exist === false) {\r",
+                  "        pm.execution.setNextRequest(null);\r",
+                  "    } else {\r",
+                  "        pm.expect(jsonData.result).to.not.eql(\"Cliente no existe\");\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetSearchUser?document={{Id_Cliente_Document}}&first_name=&last_name=&country={{API_Envio_IsoCountry}}&geo_point=00&birthday_date=&agency_id={{API_Envio_AgenciaID}}&agency_account={{API_Envio_DollaAccount}}&user={{API_Envio_id_user_}}&terminal_id={{API_Envio_TerminalID}}&counter_id={{ConectorID_Encryp}}&servicepoint={{API_Envio_ServicePoint}}&pais_id={{API_Envio_PaisID}}&UpdateDataEnrollment=true",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetSearchUser"
+              ],
+              "query": [
+                {
+                  "key": "document",
+                  "value": "{{Id_Cliente_Document}}"
+                },
+                {
+                  "key": "first_name",
+                  "value": ""
+                },
+                {
+                  "key": "last_name",
+                  "value": ""
+                },
+                {
+                  "key": "country",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "geo_point",
+                  "value": "00"
+                },
+                {
+                  "key": "birthday_date",
+                  "value": ""
+                },
+                {
+                  "key": "agency_id",
+                  "value": "{{API_Envio_AgenciaID}}"
+                },
+                {
+                  "key": "agency_account",
+                  "value": "{{API_Envio_DollaAccount}}"
+                },
+                {
+                  "key": "user",
+                  "value": "{{API_Envio_id_user_}}"
+                },
+                {
+                  "key": "terminal_id",
+                  "value": "{{API_Envio_TerminalID}}"
+                },
+                {
+                  "key": "counter_id",
+                  "value": "{{ConectorID_Encryp}}"
+                },
+                {
+                  "key": "servicepoint",
+                  "value": "{{API_Envio_ServicePoint}}"
+                },
+                {
+                  "key": "pais_id",
+                  "value": "{{API_Envio_PaisID}}"
+                },
+                {
+                  "key": "UpdateDataEnrollment",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "15 ObtenerAmbasFotos  (PEN)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/ObtenerAmbasFotos?GetISOCountry={{API_Envio_IsoCountry}}&rp_person_id_type={{id_type}}&rp_customer_id={{customer_id}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "ObtenerAmbasFotos"
+              ],
+              "query": [
+                {
+                  "key": "GetISOCountry",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "rp_person_id_type",
+                  "value": "{{id_type}}"
+                },
+                {
+                  "key": "rp_customer_id",
+                  "value": "{{customer_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "16 GetMetodoGenerico",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetMetodoGenerico?country={{API_Envio_IsoCountry}}&operation_producto_id=NA&product=NA&type=mapear_pais&username=",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetMetodoGenerico"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "operation_producto_id",
+                  "value": "NA"
+                },
+                {
+                  "key": "product",
+                  "value": "NA"
+                },
+                {
+                  "key": "type",
+                  "value": "mapear_pais"
+                },
+                {
+                  "key": "username",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "17 GetMetodoGenerico (Moneda origen)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga Inicial\r",
+                  "let data = pm.response.json();\r",
+                  "\r",
+                  "//Guardar los paises para futuro flujo Envio\r",
+                  "pm.environment.set(\"API_Envio_Monedas_Origen\", JSON.stringify(data));\r",
+                  "\r",
+                  "//console.log(pm.environment.get(\"API_Envio_Monedas_Origen\", JSON.stringify(data)));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetMetodoGenerico?country={{API_Envio_IsoCountry}}&operation_producto_id=NA&product=NA&type=countriesanddocuments2",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetMetodoGenerico"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "operation_producto_id",
+                  "value": "NA"
+                },
+                {
+                  "key": "product",
+                  "value": "NA"
+                },
+                {
+                  "key": "type",
+                  "value": "countriesanddocuments2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "18 SNIPER",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Utilidades/ValidateFunctionality/{{API_Envio_id_user_}}/{{API_Envio_ServicePoint}}}}/SNIPER",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Utilidades",
+                "ValidateFunctionality",
+                "{{API_Envio_id_user_}}",
+                "{{API_Envio_ServicePoint}}}}",
+                "SNIPER"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "19 PermisoSMS",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"UserID\":\"{{API_Envio_id_user_}}\",\"ServicePoint\":\"{{API_Envio_ServicePoint}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/PermisoSMS?",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "PermisoSMS"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "20 ValidarPermisosB2b (Script)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Obtener el valor de la variable del environment o collection\r",
+                  "\r",
+                  "let data = JSON.parse(pm.environment.get(\"API_Envio_Paises\"));\r",
+                  "let value = pm.environment.get(\"API_Envio_Destino\")\r",
+                  "\r",
+                  "let costaRica = data.Pais.find(p => p.Nombre === value);\r",
+                  "let codigo = costaRica?.Codigo;\r",
+                  "\r",
+                  "pm.environment.set(\"API_Envio_PaisBeneficiario\", codigo);\r",
+                  "\r",
+                  "//console.log(\"test\", pm.environment.get(\"PaisBeneficiarioApiEnvio\"))\r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"AgencyDolar\": \"{{API_Envio_DollaAccount}}\",\r\n    \"AgencyID\": {{API_Envio_AgenciaID}},\r\n    \"AgencyLocal\": \"{{API_Envio_LocalAccount}}\",\r\n    \"CounterID\": \"{{API_Envio_ConectorID}}\",\r\n    \"MonedaDestino\": \"\",\r\n    \"MonedaOrigen\": \"\",\r\n    \"PaisDestino\": \"{{API_Envio_PaisBeneficiario}}\",\r\n    \"PaisID\": {{API_Envio_PaisID}},\r\n    \"PaisOrigin\": \"{{API_Envio_IsoCountry}}\",\r\n    \"PasswordH2H\": \"{{API_Envio_H2HPassword}}\",\r\n    \"Terminal\": \"{{API_Envio_TerminalID}}\",\r\n    \"UserH2H\": \"{{API_Envio_H2HOperator}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://ca-aposng-apidtb-ws.{{nginx}}.airpak-services.com/api/D2b/ValidarPermisosB2b",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apidtb-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "D2b",
+                "ValidarPermisosB2b"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "21 GetEstados (PEN)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "\r",
+                  "// Recuperamos el padreId\r",
+                  "let data = JSON.parse(pm.environment.get(\"API_Envio_Paises\"));\r",
+                  "\r",
+                  "let value = pm.environment.get(\"API_Envio_Destino\")\r",
+                  "let costaRica = data.Pais.find(p => p.Nombre === value);\r",
+                  "let codigo = costaRica?.Codigo;\r",
+                  "pm.environment.set(\"API_Envio_PaisBeneficiario\", codigo);\r",
+                  "\r",
+                  "//Recuperamos  el destino y lo escapamos los espacio\r",
+                  "let pais = pm.environment.get(\"API_Envio_Destino\");\r",
+                  "let paisEncoded = encodeURIComponent(pais);\r",
+                  "pm.environment.set(\"API_Envio_padreValor\", paisEncoded);\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetEstados?pais={{API_Envio_IsoCountry}}&padreId={{API_Envio_PaisBeneficiario}}&padreValor={{API_Envio_padreValor}}&product=WU&consultaCargos=true",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetEstados"
+              ],
+              "query": [
+                {
+                  "key": "pais",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "padreId",
+                  "value": "{{API_Envio_PaisBeneficiario}}"
+                },
+                {
+                  "key": "padreValor",
+                  "value": "{{API_Envio_padreValor}}"
+                },
+                {
+                  "key": "product",
+                  "value": "WU"
+                },
+                {
+                  "key": "consultaCargos",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "22 InfoPais",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/Utilidades/InfoPais?isocountry={{API_Envio_PaisBeneficiario}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Utilidades",
+                "InfoPais"
+              ],
+              "query": [
+                {
+                  "key": "isocountry",
+                  "value": "{{API_Envio_PaisBeneficiario}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "23 ObtenerConfPreguntasCumplimiento",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "let dataRaw = pm.environment.get(\"API_Envio_Monedas_Origen\");\r",
+                  "\r",
+                  "if (dataRaw) {\r",
+                  "    let data = JSON.parse(dataRaw);\r",
+                  "\r",
+                  "    let monedas = data[0]?.Moneda || [];\r",
+                  "\r",
+                  "    let codigo = monedas.find(m => m.Codigo === \"USD\")?.Codigo\r",
+                  "        || monedas.find(m => m.local === true)?.Codigo\r",
+                  "        || monedas[0]?.Codigo;\r",
+                  "\r",
+                  "    if (codigo) {\r",
+                  "        pm.environment.set(\"API_Envio_Codigo_Moneda\", codigo);\r",
+                  "        console.log(\"Código moneda:\", codigo);\r",
+                  "    } else {\r",
+                  "        console.error(\"No hay monedas disponibles\");\r",
+                  "    }\r",
+                  "}\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga de inicial del response\r",
+                  "let jsonData = pm.response.json();\r",
+                  "//Cargamos todo el Fee del response\r",
+                  "pm.environment.set(\"V_Cumpl_Preguntas\", JSON.stringify(jsonData));\r",
+                  "//let FichaCompleta = JSON.parse(pm.environment.get(\"V_Fee_Inaquiry\"));\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/ObtenerConfPreguntasCumplimiento?isoPais={{API_Envio_IsoCountry}}&monto={{API_Envio_Cantidad_A_Enviar}}&currencyIso={{API_Envio_Codigo_Moneda}}&agencyID={{API_Envio_AgenciaID}}&agencyLocalAccount={{API_Envio_AgencyLocalAccount}}&user={{API_Envio_H2HOperator}}&password={{API_Envio_H2HPassword}}&terminalID={{API_Envio_TerminalID}}&originatingCountryID={{API_Envio_PaisID}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "ObtenerConfPreguntasCumplimiento"
+              ],
+              "query": [
+                {
+                  "key": "isoPais",
+                  "value": "{{API_Envio_IsoCountry}}"
+                },
+                {
+                  "key": "monto",
+                  "value": "{{API_Envio_Cantidad_A_Enviar}}"
+                },
+                {
+                  "key": "currencyIso",
+                  "value": "{{API_Envio_Codigo_Moneda}}"
+                },
+                {
+                  "key": "agencyID",
+                  "value": "{{API_Envio_AgenciaID}}"
+                },
+                {
+                  "key": "agencyLocalAccount",
+                  "value": "{{API_Envio_AgencyLocalAccount}}"
+                },
+                {
+                  "key": "user",
+                  "value": "{{API_Envio_H2HOperator}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{API_Envio_H2HPassword}}"
+                },
+                {
+                  "key": "terminalID",
+                  "value": "{{API_Envio_TerminalID}}"
+                },
+                {
+                  "key": "originatingCountryID",
+                  "value": "{{API_Envio_PaisID}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "24 ConsultaCargos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Cargamos el response\r",
+                  "let jsonData = pm.response.json();\r",
+                  "// Bandera para evitar loop infinito\r",
+                  "let retry = pm.environment.get(\"V_Retry_Consulta_Cargo\");\r",
+                  "let mensaje = jsonData?.statusApi?.StatusMensaje;\r",
+                  "let moneda = (pm.environment.get(\"V_API_Envio_Codigo_Moneda\") || \"\").trim();\r",
+                  "\r",
+                  "if (mensaje === \"No fue posible consultar cargos\" && !retry && moneda === \"USD\") {\r",
+                  "    pm.environment.set(\"V_Retry_Consulta_Cargo\", true);\r",
+                  "    console.log(\"Repetir request\");\r",
+                  "    \r",
+                  "    if (typeof pm.setNextRequest === \"function\") {\r",
+                  "        pm.setNextRequest(pm.info.requestName);\r",
+                  "    } else {\r",
+                  "        console.log(\"Ejecuta esto en Collection Runner para retry automático\");\r",
+                  "    }\r",
+                  "}\r",
+                  "else {\r",
+                  "    // Todo OK\r",
+                  "    console.log(\"Se elimina V_Retry_Consulta_Cargo para detener el retry\");\r",
+                  "    pm.environment.unset(\"V_Retry_Consulta_Cargo\");\r",
+                  "}\r",
+                  "\r",
+                  "\r",
+                  "//} else if (mensaje === \"No fue posible consultar cargos\") {\r",
+                  "//    // Ya falló incluso con moneda local\r",
+                  "//    pm.expect.fail(\r",
+                  "//        \"No fue posible consultar cargos ni con USD ni con moneda local\"\r",
+                  "//    );\r",
+                  "//} \r",
+                  "\r",
+                  "//Cargamos todo el Fee del response\r",
+                  "pm.environment.set(\"V_Fee_Inaquiry\", JSON.stringify(jsonData));\r",
+                  "//let FichaCompleta = JSON.parse(pm.environment.get(\"V_Fee_Inaquiry\")); \r",
+                  "\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "//Cargamos todos los paises\r",
+                  "let data = JSON.parse(pm.environment.get(\"API_Envio_Paises\")); \r",
+                  "// Recuperamos que pais esta siendo beneficiario \r",
+                  "let ISOPias = pm.environment.get(\"API_Envio_PaisBeneficiario\");\r",
+                  "// Buscar el país por el ISO para ser mas exacta la busqueda\r",
+                  "let pais = data.Pais.find(p => p.Codigo === ISOPias);\r",
+                  "// Generar número random entre 2 y 75 (Este sera el monto a enviar)\r",
+                  "let min = 2;\r",
+                  "let max = 75;\r",
+                  "let random = Math.floor(Math.random() * (max - min + 1)) + min;\r",
+                  "pm.environment.set(\"API_Envio_Cantidad_A_Enviar\", random);\r",
+                  "\r",
+                  "//////////////////////////////////////////////////////////////////////////////\r",
+                  "//if (pais) {\r",
+                  "if (!pm.environment.get(\"V_Retry_Consulta_Cargo\")) {\r",
+                  "    console.log(\"Primero intenta con la moneda disponible\");\r",
+                  "    // Código del país\r",
+                  "    let codigoPais = pais.Codigo;\r",
+                  "\r",
+                  "    // Ejemplo: tomar la primera moneda\r",
+                  "    let codigoMoneda = pais.Monedas[0].Codigo;\r",
+                  "\r",
+                  "    pm.environment.set(\"V_API_Envio_Codigo_Pais\", codigoPais);\r",
+                  "    pm.environment.set(\"V_API_Envio_Codigo_Moneda\", codigoMoneda);\r",
+                  "    //console.log(codigoPais, codigoMoneda);\r",
+                  "}\r",
+                  "else {\r",
+                  "    console.log(\"En caso contrario, usara la moneda alternativa\");\r",
+                  "    let codigoPais = pais.Codigo;\r",
+                  "\r",
+                  "    // Ejemplo: tomar la segunda moneda\r",
+                  "    let codigoMoneda = pais.Monedas[1].Codigo;\r",
+                  "\r",
+                  "    pm.environment.set(\"V_API_Envio_Codigo_Pais\", codigoPais);\r",
+                  "    pm.environment.set(\"V_API_Envio_Codigo_Moneda\", codigoMoneda);\r",
+                  "    //console.warn(\"País no encontrado\");\r",
+                  "}\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"agency_account\": \"{{API_Envio_LocalAccount}}\",\r\n    \"agency_id\": {{API_Envio_AgenciaID}},\r\n    \"aplicarmchn\": true,\r\n    \"checkmchn\": true,\r\n    \"city\": \"\",\r\n    \"counter_id\": \"{{API_Envio_ConectorID}}\",\r\n    \"country\": \"{{API_Envio_IsoCountry}}\",\r\n    \"country_opera\": \"{{API_Envio_IsoCountry}}\",\r\n    \"destination_amount\": \"0\",\r\n    \"destination_country\": \"{{V_API_Envio_Codigo_Pais}}\",\r\n    \"destination_currency\": \"{{V_API_Envio_Codigo_Moneda}}\",\r\n    \"is_amount_to_receive\": false,\r\n    \"isD2b\": false,\r\n    \"origin_amount\": \"{{API_Envio_Cantidad_A_Enviar}}\",\r\n    \"origin_country\": \"{{API_Envio_IsoCountry}}\",\r\n    \"origin_currency\": \"{{API_Envio_Codigo_Moneda}}\",\r\n    \"product\": \"WU\",\r\n    \"service_sms\": \"0\",\r\n    \"servicepoint\": \"{{API_Envio_ServicePoint}}\",\r\n    \"state\": \"\",\r\n    \"subagentid\": {{API_Envio_SubAgentID}},\r\n    \"terminal_id\": \"{{API_Envio_TerminalID}}\",\r\n    \"user\": \"{{API_Envio_id_user_}}\",\r\n    \"WILL_CALL_SYR\": \"WILL_CALL_SYR\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/ConsultaCargos?",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "ConsultaCargos"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "25 GetMetodoGenerico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GetMetodoGenerico?country={{API_Envio_PaisBeneficiario}}&operation_producto_id=NA&product=1&type=casa_cambioCR",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GetMetodoGenerico"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "{{API_Envio_PaisBeneficiario}}"
+                },
+                {
+                  "key": "operation_producto_id",
+                  "value": "NA"
+                },
+                {
+                  "key": "product",
+                  "value": "1"
+                },
+                {
+                  "key": "type",
+                  "value": "casa_cambioCR"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "26 ValidarToken",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/ValidarToken?",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "ValidarToken"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "27 EnvioDeDinero (Step Inicial v2)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "//Carga del Fee\r",
+                  "let FeeData = JSON.parse(pm.environment.get(\"V_Fee_Inaquiry\"));\r",
+                  "//Carga Ficha Completa del cliente\r",
+                  "let FichaData = JSON.parse(pm.environment.get(\"V_Ficha_Completa\"));\r",
+                  "//Carga Sesion Completa del cliente\r",
+                  "let SesionData = JSON.parse(pm.environment.get(\"V_Sesion_Completa\"));\r",
+                  "//Cargar de cumplimiento \r",
+                  "let CumplData = JSON.parse(pm.environment.get(\"V_Cumpl_Preguntas\"));\r",
+                  "//Tool\r",
+                  "let moneda = pm.environment.get(\"API_Envio_Codigo_Moneda\"); // o de donde venga\r",
+                  "let agency_account_value = moneda === \"USD\"\r",
+                  "    ? SesionData.SesionUsuario.AgencyDolarAccount\r",
+                  "    : SesionData.SesionUsuario.AgencyLocalAccount;\r",
+                  "\r",
+                  "//Beneficiario (Sino no existe un beneficiario se emula crear uno nuevo)\r",
+                  "let primerBeneficiario = FichaData.beneficiarios && FichaData.beneficiarios.length > 0\r",
+                  "    ? FichaData.beneficiarios[0]\r",
+                  "    : {\r",
+                  "        PaisBen: pm.environment.get(\"API_Envio_Destino\"),\r",
+                  "        EstadoBen: \"NO DEFINIDO\",\r",
+                  "        CiudadBen: \"\",\r",
+                  "        Dato1: \"\",\r",
+                  "        OrigenFondos: CumplData.valOriginCurrency,//\"SALARIO\",\r",
+                  "        DestinoFondos: CumplData.valDestinationCurrency,//\"SOPORTE FAMILIAR\",\r",
+                  "        TipoRelacion: CumplData.valRelationshipType,// \"SOCIO(A)\",\r",
+                  "        Primer_Nombre: \"ELYIN\",\r",
+                  "        Segundo_Nombre: \"ANUAR\",\r",
+                  "        Primer_Apellido: \"SARRIA\",\r",
+                  "        Segundo_Apellido: \"MONTENEGRO\",\r",
+                  "        Apellido_Casada: \"\"\r",
+                  "    };\r",
+                  "\r",
+                  "//Data completa\r",
+                  "let requestBody = {\r",
+                  "    addr_line1: FichaData.addr_line1,\r",
+                  "    agency_account: agency_account_value,\r",
+                  "    agency_id: pm.environment.get(\"API_Envio_AgenciaID\"),\r",
+                  "    answer: \"\",\r",
+                  "    birthday_customer: FichaData.birthday_date,\r",
+                  "    birthday_ope: \"\",\r",
+                  "    buffer: \"\",\r",
+                  "    Cancelar_pin: 0,\r",
+                  "    charges: FeeData.charges,\r",
+                  "    checkmc: true,\r",
+                  "    city: \"\",\r",
+                  "    cobrar_pin: 0,\r",
+                  "    codigo_promocional: \"\",\r",
+                  "    counter_id: SesionData.ConectorID,\r",
+                  "    country: SesionData.SesionUsuario.IsoCountry,\r",
+                  "    country_customer: SesionData.SesionUsuario.IsoCountry,\r",
+                  "    country_ope: SesionData.SesionUsuario.IsoCountry,\r",
+                  "    customer_id: FichaData.customer_id, //\"{{customer_id}}\",\r",
+                  "    destination_amount: parseInt(FeeData.destination_amount),\r",
+                  "    //destination_amount: parseInt(pm.environment.get(\"V_API_Envio_destination_amount\")),\r",
+                  "    destination_country: pm.environment.get(\"V_API_Envio_Codigo_Pais\"),\r",
+                  "    destination_currency: pm.environment.get(\"V_API_Envio_Codigo_Moneda\"),\r",
+                  "    destination_of_funds: primerBeneficiario.DestinoFondos,\r",
+                  "    document_customer: FichaData.document,\r",
+                  "    document_ope: \"\",\r",
+                  "    email: \"\",\r",
+                  "    envio_d2b: \"0\",\r",
+                  "    exchange_rate: FeeData.exchange_rate,\r",
+                  "    first_name_customer: FichaData.first_name1,\r",
+                  "    first_name1: primerBeneficiario.Primer_Nombre,\r",
+                  "    first_name2: primerBeneficiario.Segundo_Nombre,\r",
+                  "    geopoint_ope: \"0\",\r",
+                  "    idtasa: FeeData.idtasa,\r",
+                  "    is_amount_to_receive: false,\r",
+                  "    last_name_customer: FichaData.last_name1, //REV\r",
+                  "    last_name_ope: \"\",\r",
+                  "    last_name1: primerBeneficiario.Primer_Apellido,\r",
+                  "    last_name2: primerBeneficiario.Segundo_Apellido,\r",
+                  "    montolocal: parseInt(FeeData.montolocal),\r",
+                  "    name_ope: \"\",\r",
+                  "    obtener_pin: 1,\r",
+                  "    origin_amount: FeeData.origin_amount,\r",
+                  "    origin_country: pm.environment.get(\"API_Envio_IsoCountry\"),\r",
+                  "    origin_currency: pm.environment.get(\"API_Envio_Codigo_Moneda\"),\r",
+                  "    pay_amount: FeeData.pay_amount,\r",
+                  "    pin: 0,\r",
+                  "    product: \"WU\",\r",
+                  "    question: \"\",\r",
+                  "    reference_no: FeeData.reference_no,\r",
+                  "    reference_transaction: FeeData.reference_transaction,\r",
+                  "    regionid: {\r",
+                  "        BrowserName: SesionData.BrowserName,\r",
+                  "        BrowserPlataform: SesionData.BrowserPlataform,\r",
+                  "        BrowserType: \"\",\r",
+                  "        ConectorID: SesionData.ConectorID,\r",
+                  "        DatetimeConfig: \"\",\r",
+                  "        datosToken: {\r",
+                  "            browser_: SesionData.datosToken.browser_,\r",
+                  "            cookie_: SesionData.datosToken.cookie_,\r",
+                  "            id_user_: SesionData.datosToken.id_user_,\r",
+                  "            idsession_decript_: \"\",\r",
+                  "            ip_: SesionData.datosToken.ip_,\r",
+                  "            os_: SesionData.datosToken.os_,\r",
+                  "            service_point_: SesionData.datosToken.service_point_,\r",
+                  "            session_token_: SesionData.datosToken.session_token_\r",
+                  "        },\r",
+                  "        DollaAccount: SesionData.DollaAccount,\r",
+                  "        HostName: \"\",\r",
+                  "        IpAddress: SesionData.IpAddress,\r",
+                  "        LocalAccount: SesionData.LocalAccount,\r",
+                  "        MacAddress: \"\",\r",
+                  "        MessageError: \"\",\r",
+                  "        Redireccionar: \"\",\r",
+                  "        RemoteHOST: \"\",\r",
+                  "        RemoteIP: \"\",\r",
+                  "        RemoteMACAddress: \"\",\r",
+                  "        RemoteUSER: \"\",\r",
+                  "        ServicePoint: SesionData.ServicePoint,\r",
+                  "        SesionUsuario: {\r",
+                  "            AgenciaID: SesionData.SesionUsuario.AgenciaID,\r",
+                  "            AgencyDolarAccount: SesionData.SesionUsuario.AgencyDolarAccount,\r",
+                  "            AgencyLocalAccount: SesionData.SesionUsuario.AgencyLocalAccount,\r",
+                  "            CCConnectorID: \"\",\r",
+                  "            CCServicePoint: \"\",\r",
+                  "            CCSessionID: \"\",\r",
+                  "            CCTerminalID: \"\",\r",
+                  "            CCUser: \"\",\r",
+                  "            ConnectorID: SesionData.SesionUsuario.ConnectorID,\r",
+                  "            Email: SesionData.SesionUsuario.Email,\r",
+                  "            GrupoID: SesionData.SesionUsuario.GrupoID,\r",
+                  "            H2HOperator: SesionData.SesionUsuario.H2HOperator,\r",
+                  "            H2HPassword: SesionData.SesionUsuario.H2HPassword,\r",
+                  "            Id: SesionData.SesionUsuario.Id,\r",
+                  "            IsoCountry: SesionData.SesionUsuario.IsoCountry,\r",
+                  "            Modalidad: \"\",\r",
+                  "            NombreCompleto: SesionData.SesionUsuario.NombreCompleto,\r",
+                  "            PaisID: SesionData.SesionUsuario.PaisID,\r",
+                  "            RegionID: SesionData.SesionUsuario.RegionID,\r",
+                  "            Rol: \"\",\r",
+                  "            Roles: null,\r",
+                  "            RolName: \"\",\r",
+                  "            ServicePointId: SesionData.SesionUsuario.ServicePointId,\r",
+                  "            SubAgentID: parseInt(SesionData.SesionUsuario.SubAgentID),\r",
+                  "            TerminalID: SesionData.SesionUsuario.TerminalID,\r",
+                  "            TracsOperator: SesionData.SesionUsuario.TracsOperator,\r",
+                  "            UserDocumentID: SesionData.SesionUsuario.UserDocumentID\r",
+                  "        },\r",
+                  "        SesionVersion: \"\",\r",
+                  "        Status: \"1\",\r",
+                  "        statusApi: {\r",
+                  "            posError: null,\r",
+                  "            StatusCodigo: 1001,\r",
+                  "            StatusMensaje: \"Operación realizada con éxito\",\r",
+                  "            StatusTransaccion: \"\",\r",
+                  "            StatusType: \"\"\r",
+                  "        },\r",
+                  "        StrCodeCripted: \"\",\r",
+                  "        StrUserCripted: \"\",\r",
+                  "        TerminalID: SesionData.TerminalID,\r",
+                  "        TiempoTimeOut: SesionData.TiempoTimeOut,\r",
+                  "        Token: SesionData.Token\r",
+                  "    },\r",
+                  "    routing: \"WADSCR000\\\\EBD\",\r",
+                  "    rp_bd_account_number: null,\r",
+                  "    rp_bd_name: null,\r",
+                  "    rp_bd_routing_number: null,\r",
+                  "    rq_bd_account_prefix: null,\r",
+                  "    rq_bd_account_suffix: null,\r",
+                  "    rq_bd_account_type: null,\r",
+                  "    rq_bd_bank_account_holder: null,\r",
+                  "    rq_bd_bank_code: null,\r",
+                  "    rq_bd_bank_location: null,\r",
+                  "    rq_bd_rcv_financial_id: null,\r",
+                  "    rq_bd_sort_code: null,\r",
+                  "    service_charges: \"0\",\r",
+                  "    servicepoint: SesionData.ServicePoint,\r",
+                  "    source_of_funds: primerBeneficiario.OrigenFondos,\r",
+                  "    state: \"\",\r",
+                  "    state_code: \"\",\r",
+                  "    subagentid: String(SesionData.SesionUsuario.SubAgentID),\r",
+                  "    tasa: parseInt(FeeData.tasa),\r",
+                  "    terminal_id: SesionData.SesionUsuario.TerminalID,\r",
+                  "    TipoEnvio: \"2\",\r",
+                  "    total_amount: FeeData.total_amount,\r",
+                  "    total_tax: FeeData.total_tax,\r",
+                  "    type_of_relationship: primerBeneficiario.TipoRelacion,\r",
+                  "    user: SesionData.SesionUsuario.Id,\r",
+                  "    usuarioExist: {\r",
+                  "        addr_line1: FichaData.addr_line1,\r",
+                  "        addr_line2: FichaData.addr_line2,\r",
+                  "        agency: \"\",\r",
+                  "        asociados: FichaData.asociados,//JSON.stringify(FichaData.asociados),\r",
+                  "        associated: FichaData.associated,\r",
+                  "        associated_photo: FichaData.associated_photo,\r",
+                  "        beneficiarios: FichaData.beneficiarios, //JSON.stringify(FichaData.beneficiarios),\r",
+                  "        birthday_date: FichaData.birthday_date,\r",
+                  "        city: FichaData.city,\r",
+                  "        ClienteTieneColeccionDocushare: FichaData.ClienteTieneColeccionDocushare,\r",
+                  "        confirm: FichaData.confirm,\r",
+                  "        continua: FichaData.continua,\r",
+                  "        country: FichaData.country,\r",
+                  "        country_code: FichaData.country_code,\r",
+                  "        country_name: FichaData.country_name,\r",
+                  "        country_of_birth: FichaData.country_of_birth,\r",
+                  "        customer_enrollment: FichaData.customer_enrollment,\r",
+                  "        customer_id: FichaData.customer_id,\r",
+                  "        customer_syr_id: \"\",\r",
+                  "        description_public_position: \"\",\r",
+                  "        diligencia: FichaData.diligencia,\r",
+                  "        doc_admite_jumio: FichaData.doc_admite_jumio,\r",
+                  "        document: FichaData.document,\r",
+                  "        email: FichaData.email,\r",
+                  "        exist: FichaData.exist,\r",
+                  "        first_name1: FichaData.first_name1,\r",
+                  "        first_name2: FichaData.first_name2,\r",
+                  "        geo_point: FichaData.geo_point,\r",
+                  "        has_relative_politics: FichaData.has_relative_politics,\r",
+                  "        helpshift: \"{}\",\r",
+                  "        id_country_of_issue: FichaData.id_country_of_issue,\r",
+                  "        id_expiration_date: FichaData.id_expiration_date,\r",
+                  "        id_issue_date: FichaData.id_issue_date,\r",
+                  "        id_number: FichaData.id_number,\r",
+                  "        id_place_of_issue: FichaData.id_place_of_issue,\r",
+                  "        id_type: FichaData.id_type,\r",
+                  "        id_type_name: FichaData.id_type_name,\r",
+                  "        is_pep: FichaData.is_pep,\r",
+                  "        last_name1: FichaData.last_name1,\r",
+                  "        last_name2: FichaData.last_name2,\r",
+                  "        left_finger: FichaData.left_finger,\r",
+                  "        marital_status: FichaData.marital_status,\r",
+                  "        married_name: FichaData.married_name,\r",
+                  "        nationality: FichaData.nationality,\r",
+                  "        nit: \"\",\r",
+                  "        node_country: \"[]\",\r",
+                  "        number: FichaData.number,\r",
+                  "        occupation: FichaData.occupation,\r",
+                  "        permite_fcc: FichaData.permite_fcc,\r",
+                  "        phone_number: FichaData.phone_number,\r",
+                  "        place_of_birth: FichaData.place_of_birth,\r",
+                  "        postal_code: FichaData.postal_code,\r",
+                  "        pre_registrado: FichaData.pre_registrado,\r",
+                  "        public_position: FichaData.public_position,\r",
+                  "        recibo: FichaData.recibo ?? null,\r",
+                  "        result: FichaData.result,\r",
+                  "        right_finger: FichaData.right_finger,\r",
+                  "        sex: FichaData.sex,\r",
+                  "        state_code: FichaData.state_code,\r",
+                  "        state_name: FichaData.state_name,\r",
+                  "        statusApi: {\r",
+                  "            posError: null,\r",
+                  "            StatusCodigo: 1001,\r",
+                  "            StatusMensaje: \"Operación realizada con éxito\",\r",
+                  "            StatusTransaccion: \"\",\r",
+                  "            StatusType: \"\"\r",
+                  "        },\r",
+                  "        terminal: \"\",\r",
+                  "        texto_envio: FichaData.texto_envio,\r",
+                  "        time_public_position: \"\",\r",
+                  "        tipo_usuario: \"\",\r",
+                  "        updated: FichaData.updated,\r",
+                  "        validate: FichaData.validate\r",
+                  "    },\r",
+                  "    \"WILL_CALL_SYR\": \"\"\r",
+                  "}\r",
+                  "\r",
+                  "//JSON.stringify(requestBody)\r",
+                  "pm.environment.set(\"V_API_Envio_BodyRequest\", JSON.stringify(requestBody));\r",
+                  "//console.log(\"BodyRequest completo: \", requestBody);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga de inicial del response\r",
+                  "let jsonData = pm.response.json();\r",
+                  "\r",
+                  "//Guardar Toda la configuracion del cliente, necesario para el Fee y el Envio\r",
+                  "pm.environment.set(\"V_Envio_De_Dinero\", JSON.stringify(jsonData));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{V_API_Envio_BodyRequest}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/EnvioDeDinero?",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "EnvioDeDinero"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "28 ValidarToken",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/ValidarToken?",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "ValidarToken"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "29 Enviar Dinero (Step Final)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "//Carga del Buffer\r",
+                  "let ResponseEnvioDinero = JSON.parse(pm.environment.get(\"V_Envio_De_Dinero\"));\r",
+                  "let BufferData = JSON.parse(pm.environment.get(\"V_API_Envio_BodyRequest\"));\r",
+                  "\r",
+                  "//Cargamos el buffer (SendMoneyStore)\r",
+                  "BufferData.buffer = ResponseEnvioDinero.buffer; //Encriptado\r",
+                  "BufferData.cobrar_pin = ResponseEnvioDinero.cobrar_pin; //1\r",
+                  "BufferData.obtener_pin = ResponseEnvioDinero.obtener_pin;//1\r",
+                  "\r",
+                  "// Guardar el buffer modificado en la variable de entorno V_API_Envio_BodyRequest\r",
+                  "pm.environment.set(\"V_API_Envio_BodyRequest\", JSON.stringify(BufferData));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//Carga de inicial del response\r",
+                  "let jsonData = pm.response.json();\r",
+                  "\r",
+                  "//Guardar Toda la configuracion del cliente, necesario para el Fee y el Envio\r",
+                  "pm.environment.set(\"V_API_Envio_Trx_Compl\", JSON.stringify(jsonData));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{V_API_Envio_BodyRequest}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/EnvioDeDinero?",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "EnvioDeDinero"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "30 ComprobanteEnvioDeDineroCA (repComprobante)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "//////////////////////////Cargamos la data//////////////////////////////////\r",
+                  "\r",
+                  "let DataComprobante = JSON.parse(pm.environment.get(\"V_API_Envio_Trx_Compl\"));\r",
+                  "let SesionData = JSON.parse(pm.environment.get(\"V_Sesion_Completa\"));\r",
+                  "\r",
+                  "//////////////////////////Validamos el comprobante//////////////////////////\r",
+                  "\r",
+                  "const isoPais = DataComprobante.Datoscomprobante.Country; // ejemplo: \"NI\"\r",
+                  "let ComprobantePais;\r",
+                  "switch (isoPais) {\r",
+                  "    case \"GT\": ComprobantePais = \"repComprobante\"; break;\r",
+                  "    default: ComprobantePais = \"repComprobanteDoble\";\r",
+                  "}\r",
+                  "\r",
+                  "//////////////////////////Request Final////////////////////////////////////\r",
+                  "\r",
+                  "let requestBody = {\r",
+                  "    Datoscomprobante: {\r",
+                  "        agency_id: String(DataComprobante.Datoscomprobante.Agency_id),\r",
+                  "        answer: DataComprobante.Datoscomprobante.Answer,\r",
+                  "        country: DataComprobante.Datoscomprobante.Country,\r",
+                  "        destination_country: DataComprobante.Datoscomprobante.Destination_country,\r",
+                  "        destination_currency: DataComprobante.Datoscomprobante.Destination_currency,\r",
+                  "        DestinationAmount: String(DataComprobante.Datoscomprobante.DestinationAmount),\r",
+                  "        message: DataComprobante.Datoscomprobante.Message,\r",
+                  "        origin_currency: DataComprobante.Datoscomprobante.Origin_currency,\r",
+                  "        OriginAmount: String(DataComprobante.Datoscomprobante.OriginAmount),\r",
+                  "        question: \"\",//DataComprobante.Datoscomprobante.question, //Validar\r",
+                  "        SMS: false,\r",
+                  "        transfer_number_MTCN: String(DataComprobante.Datoscomprobante.Transfer_number_MTCN),\r",
+                  "        user: DataComprobante.Datoscomprobante.User\r",
+                  "    },\r",
+                  "    header: {\r",
+                  "        agenciaID: SesionData.SesionUsuario.AgenciaID,\r",
+                  "        grupoID: SesionData.SesionUsuario.GrupoID,\r",
+                  "        paisID: SesionData.SesionUsuario.PaisID,\r",
+                  "        parameterName: ComprobantePais//\"repComprobanteDoble\"\r",
+                  "    }\r",
+                  "}\r",
+                  "\r",
+                  "//JSON.stringify(requestBody)\r",
+                  "pm.environment.set(\"V_API_Envio_repComprobanteDoble\", JSON.stringify(requestBody));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{V_API_Envio_repComprobanteDoble}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://ca-aposng-apicomp-ws.{{nginx}}.airpak-services.com/ComprobanteEnvioDeDineroCA?",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apicomp-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "ComprobanteEnvioDeDineroCA"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "31 ComprobanteEnvioDeDineroCA (repRecibo)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "\r",
+                  "let DataComprobante = JSON.parse(pm.environment.get(\"V_API_Envio_Trx_Compl\"));\r",
+                  "let SesionData = JSON.parse(pm.environment.get(\"V_Sesion_Completa\"));\r",
+                  "\r",
+                  "let requestBody = {\r",
+                  "    Datoscomprobante: {\r",
+                  "        agency_id: String(DataComprobante.Datoscomprobante.Agency_id),\r",
+                  "        answer: DataComprobante.Datoscomprobante.Answer,\r",
+                  "        country: DataComprobante.Datoscomprobante.Country,\r",
+                  "        destination_country: DataComprobante.Datoscomprobante.Destination_country,\r",
+                  "        destination_currency: DataComprobante.Datoscomprobante.Destination_currency,\r",
+                  "        DestinationAmount: String(DataComprobante.Datoscomprobante.DestinationAmount),\r",
+                  "        message: DataComprobante.Datoscomprobante.Message,\r",
+                  "        origin_currency: DataComprobante.Datoscomprobante.Origin_currency,\r",
+                  "        OriginAmount: String(DataComprobante.Datoscomprobante.OriginAmount),\r",
+                  "        question: DataComprobante.Datoscomprobante.question,\r",
+                  "        SMS: false,\r",
+                  "        transfer_number_MTCN: String(DataComprobante.Datoscomprobante.Transfer_number_MTCN),\r",
+                  "        user: DataComprobante.Datoscomprobante.User\r",
+                  "    },\r",
+                  "    header: {\r",
+                  "        agenciaID: SesionData.SesionUsuario.AgenciaID,\r",
+                  "        grupoID: SesionData.SesionUsuario.GrupoID,\r",
+                  "        paisID: SesionData.SesionUsuario.PaisID,\r",
+                  "        parameterName: \"repRecibo\"\r",
+                  "    }\r",
+                  "}\r",
+                  "\r",
+                  "//JSON.stringify(requestBody)\r",
+                  "pm.environment.set(\"V_API_Envio_repRecibo\", JSON.stringify(requestBody));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{V_API_Envio_repRecibo}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://ca-aposng-apicomp-ws.{{nginx}}.airpak-services.com/ComprobanteEnvioDeDineroCA?",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apicomp-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "ComprobanteEnvioDeDineroCA"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "32 GenerarXML",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "\r",
+                  "//Datos comprovante\r",
+                  "let DataComprobante = JSON.parse(pm.environment.get(\"V_API_Envio_Trx_Compl\"));\r",
+                  "//Sesion de operador APOS\r",
+                  "let SesionData = JSON.parse(pm.environment.get(\"V_Sesion_Completa\"));\r",
+                  "//Tool\r",
+                  "let today = new Date();\r",
+                  "let yyyy = today.getFullYear();\r",
+                  "let mm = String(today.getMonth() + 1).padStart(2, '0');\r",
+                  "let dd = String(today.getDate()).padStart(2, '0');\r",
+                  "let fecha_ = `${yyyy}${mm}${dd}`;\r",
+                  "\r",
+                  "//Request Body JSON\r",
+                  "let requestBody = {\r",
+                  "    fecha: String(fecha_),\r",
+                  "    iduser: SesionData.SesionUsuario.Id,\r",
+                  "    isocountry: SesionData.SesionUsuario.IsoCountry,\r",
+                  "    monto: DataComprobante.Datoscomprobante.OriginAmount, \r",
+                  "    padMtcn: String(DataComprobante.Datoscomprobante.Transfer_number_MTCN),\r",
+                  "    regionId: SesionData.SesionUsuario.RegionID,\r",
+                  "    servicePoint: SesionData.ServicePoint,\r",
+                  "    subAgentId: SesionData.SesionUsuario.SubAgentID\r",
+                  "}\r",
+                  "\r",
+                  "//JSON.stringify(requestBody)\r",
+                  "pm.environment.set(\"V_API_Envio_GenerarXML\", JSON.stringify(requestBody));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{API_Envio_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{V_API_Envio_GenerarXML}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://ca-aposng-apien-ws.{{nginx}}.airpak-services.com/api/GenerarXML",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-apien-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "GenerarXML"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 Cerrar Sesion",
+      "item": [
+        {
+          "name": "00 CerrarSesion",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "https://ca-aposng-api-ws.{{nginx}}.airpak-services.com/api/Main/CerrarSesion?code={{API_APOS_ServicePointId}}&user={{API_APOS_id_user_}}",
+              "protocol": "https",
+              "host": [
+                "ca-aposng-api-ws",
+                "{{nginx}}",
+                "airpak-services",
+                "com"
+              ],
+              "path": [
+                "api",
+                "Main",
+                "CerrarSesion"
+              ],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "{{API_APOS_ServicePointId}}"
+                },
+                {
+                  "key": "user",
+                  "value": "{{API_APOS_id_user_}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
